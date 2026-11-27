@@ -21,9 +21,19 @@ CUSTOM_CSS = """
     color: #eaf2f8;
     font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   }
+  header[data-testid="stHeader"] {
+    background: rgba(7, 17, 31, 0.85) !important;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(160, 190, 215, 0.08);
+  }
+  header[data-testid="stHeader"] button,
+  header[data-testid="stHeader"] svg,
+  header[data-testid="stHeader"] a {
+    color: #9bb0c1 !important;
+  }
   .block-container {
     max-width: 1180px;
-    padding-top: 1.4rem;
+    padding-top: 3.6rem;
     padding-bottom: 2.5rem;
   }
   h1, h2, h3, h4 {
@@ -214,16 +224,49 @@ CUSTOM_CSS = """
     color: #70ddbd;
     font-weight: 700;
   }
-  .stButton > button[kind="primary"] {
+  .stButton > button[kind="primary"],
+  [data-testid="stFormSubmitButton"] > button {
     background: #70ddbd !important;
     color: #06211b !important;
     border: 0 !important;
     font-weight: 800 !important;
   }
+  .stButton > button:not([kind="primary"]) {
+    background: #0b1c31 !important;
+    color: #dce8ef !important;
+    border: 1px solid rgba(112, 221, 189, 0.32) !important;
+    border-radius: 9px !important;
+    font-weight: 600 !important;
+  }
+  .stButton > button:not([kind="primary"]):hover {
+    background: #132a46 !important;
+    border-color: #70ddbd !important;
+    color: #ffffff !important;
+  }
+  [data-testid="stForm"] {
+    background: rgba(11, 28, 49, 0.72) !important;
+    border: 1px solid rgba(144, 176, 199, 0.22) !important;
+    border-radius: 14px !important;
+    padding: 16px !important;
+  }
+  .stTextArea label,
+  .stSelectbox label,
+  [data-testid="stCaptionContainer"] p {
+    color: #b7c8d6 !important;
+  }
   .stTextArea textarea {
-    background-color: #0b1c31 !important;
+    background-color: #071728 !important;
     color: #eaf2f8 !important;
-    border-color: rgba(144, 176, 199, 0.25) !important;
+    border-color: rgba(144, 176, 199, 0.28) !important;
+  }
+  .stTextArea textarea::placeholder {
+    color: #7f95a8 !important;
+    opacity: 1 !important;
+  }
+  div[data-baseweb="select"] > div {
+    background-color: #0b1c31 !important;
+    border-color: rgba(144, 176, 199, 0.28) !important;
+    color: #eaf2f8 !important;
   }
   @media (max-width: 780px) {
     .ps-hero, .ps-card-grid-3, .ps-card-grid-4 { grid-template-columns: 1fr; }
@@ -522,9 +565,11 @@ with col_input:
     st.subheader(t["check_heading"])
     st.caption(t["demo_caption"])
 
-    demo_cols = st.columns(4)
+    demo_row1 = st.columns(2)
+    demo_row2 = st.columns(2)
+    demo_slots = [*demo_row1, *demo_row2]
     for idx, (label, val) in enumerate(t["demos"]):
-        if demo_cols[idx].button(label, use_container_width=True, key=f"demo_{idx}"):
+        if demo_slots[idx].button(label, use_container_width=True, key=f"demo_{idx}"):
             st.session_state.scan_input = val
             st.session_state.last_error = ""
 

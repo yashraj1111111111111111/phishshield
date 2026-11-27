@@ -42,6 +42,25 @@ def load_dataset(csv_path: Path = DATASET_PATH) -> tuple[list[str], list[int]]:
     return urls, labels
 
 
+def evaluate_behavioral_sanity(model) -> tuple[bool, list[dict]]:
+    """Verify the trained model does not trigger shortcut false positives on benign deep-path URLs."""
+    probes = [
+        ("https://www.example.com", 0, 0.25),
+        ("https://example.org/tools/random-url-generator/", 0, 0.35),
+        ("https://docs.example.edu/3/library/pathlib.html", 0, 0.35),
+        ("http://198.51.100.42/verify", 1, 0.70),
+        ("http://paypal-login-secure.example/account/update", 1, 0.70),
+    ]
+    results = []
+    all_ok = True
+    for url, expected, threshold in probes:
+        prob = round(float(model.predict_proba([url_features(url)])[0][1]), 4)
+        ok = prob < threshold if expected == 0 else prob > threshold
+        all_ok = all_ok and ok
+        results.append({"url": url, "expected": expected, "prob": prob, "passed": ok})
+    return all_ok, results
+
+
 def train_and_evaluate(csv_path: Path = DATASET_PATH, model_path: Path = MODEL_PATH) -> dict:
     urls, labels = load_dataset(csv_path)
     features = [url_features(url) for url in urls]
@@ -59,6 +78,9 @@ def train_and_evaluate(csv_path: Path = DATASET_PATH, model_path: Path = MODEL_P
     tn, fp, fn, tp = confusion_matrix(y_test, predictions, labels=[0, 1]).ravel()
     fpr = float(fp / (fp + tn)) if (fp + tn) else 0.0
     fnr = float(fn / (fn + tp)) if (fn + tp) else 0.0
+    sanity_passed, sanity_probes = evaluate_behavioral_sanity(model)
+    benign_urls = [u for u, lbl in zip(urls, labels) if lbl == 0]
+    benign_path_share = round(sum(1 for u in benign_urls if u.count("/") >= 3) / len(benign_urls), 4)
 
     metrics = {
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
@@ -66,6 +88,7 @@ def train_and_evaluate(csv_path: Path = DATASET_PATH, model_path: Path = MODEL_P
         "total_records": len(urls),
         "train_records": len(x_train),
         "test_records": len(x_test),
+        "benign_with_paths_ratio": benign_path_share,
         "accuracy": round(float(accuracy_score(y_test, predictions)), 4),
         "precision": round(float(precision_score(y_test, predictions, zero_division=0)), 4),
         "recall": round(float(recall_score(y_test, predictions, zero_division=0)), 4),
@@ -73,6 +96,8 @@ def train_and_evaluate(csv_path: Path = DATASET_PATH, model_path: Path = MODEL_P
         "false_positive_rate": round(fpr, 4),
         "false_negative_rate": round(fnr, 4),
         "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+        "behavioral_sanity_passed": sanity_passed,
+        "behavioral_sanity_probes": sanity_probes,
     }
 
     model_path.parent.mkdir(parents=True, exist_ok=True)
@@ -88,8 +113,9 @@ def write_analytics_report(metrics: dict, json_path: Path = METRICS_JSON_PATH, m
     report = f"""# PhishShield MLP Evaluation Report
 
 - **Evaluated at (UTC):** {metrics["evaluated_at"]}
-- **Dataset:** `{metrics["dataset_path"]}` ({metrics["total_records"]} total: {metrics["train_records"]} train / {metrics["test_records"]} test)
+- **Dataset:** `{metrics["dataset_path"]}` ({metrics["total_records"]} total: {metrics["train_records"]} train / {metrics["test_records"]} test; benign URLs with paths: {metrics["benign_with_paths_ratio"]:.1%})
 - **Model:** `StandardScaler` + `MLPClassifier(hidden_layer_sizes=(16, 8), max_iter=200, early_stopping=True)` over 14 lexical URL features
+- **Behavioral Sanity Probes Passed:** {metrics["behavioral_sanity_passed"]}
 
 ## Held-Out Test Metrics
 

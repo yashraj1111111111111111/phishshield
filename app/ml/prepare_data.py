@@ -37,6 +37,23 @@ PHISH_BRANDS = ["paypal", "amazon", "sbi", "hdfc", "apple", "google", "netflix",
 PHISH_TOKENS = ["verify", "login", "secure", "account", "update", "free", "bonus"]
 SHORTENER_HOSTS = ["bit.ly", "tinyurl.com", "t.co", "is.gd"]
 TEST_NET_IPS = ["192.0.2", "198.51.100", "203.0.113"]
+AUGMENTED_BENIGN_PATHS = [
+    "/about",
+    "/contact",
+    "/pricing",
+    "/support/faq",
+    "/docs/getting-started",
+    "/docs/api/reference",
+    "/tools/random-url-generator/",
+    "/tools/text-formatter/",
+    "/blog/2026/security-basics",
+    "/articles/guide/overview",
+    "/courses/intro/syllabus",
+    "/products/catalog/details",
+    "/research/publications/index.html",
+    "/search?q=guide&page=2",
+    "/resources/downloads/checklist",
+]
 
 
 def _normalize_label(raw_label: str) -> int | None:
@@ -121,6 +138,39 @@ def generate_reserved_baseline(count_per_class: int = 600, seed: int = 42) -> li
     return rows
 
 
+def augment_benign_url_diversity(
+    rows: list[tuple[str, int]], max_augmented: int = 120_000, seed: int = 42
+) -> list[tuple[str, int]]:
+    """Eliminate homepage-only / www-only benign dataset shortcuts by adding realistic benign paths."""
+    benign_urls = [url for url, label in rows if label == 0]
+    if not benign_urls:
+        return rows
+
+    has_paths_ratio = sum(1 for u in benign_urls if u.count("/") >= 3) / len(benign_urls)
+    no_www_ratio = sum(1 for u in benign_urls if "://www." not in u.lower()) / len(benign_urls)
+    if has_paths_ratio >= 0.15 and no_www_ratio >= 0.15:
+        return rows
+
+    rng = random.Random(seed)
+    seen = {url for url, _ in rows}
+    augmented = list(rows)
+    target = min(max_augmented, len(benign_urls))
+    sampled_bases = rng.sample(benign_urls, k=target) if target < len(benign_urls) else list(benign_urls)
+
+    for base_url in sampled_bases:
+        cleaned = base_url.rstrip("/")
+        if "://www." in cleaned.lower() and rng.random() < 0.65:
+            cleaned = cleaned.replace("://www.", "://", 1).replace("://WWW.", "://", 1)
+        path = rng.choice(AUGMENTED_BENIGN_PATHS)
+        candidate = f"{cleaned}{path}"
+        if candidate not in seen:
+            seen.add(candidate)
+            augmented.append((candidate, 0))
+
+    rng.shuffle(augmented)
+    return augmented
+
+
 def write_processed_csv(rows: list[tuple[str, int]], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", newline="", encoding="utf-8") as handle:
@@ -133,6 +183,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare phishing_urls.csv for MLP training.")
     parser.add_argument("--raw", type=Path, default=None, help="Optional raw CSV with url,label columns.")
     parser.add_argument("--invert-labels", action="store_true", help="Flip 0/1 labels (e.g., UCI PhiUSIIL uses 1=legitimate, 0=phishing).")
+    parser.add_argument("--no-augment", action="store_true", help="Disable automatic benign path/no-www bias augmentation.")
     parser.add_argument("--output", type=Path, default=PROCESSED_DEFAULT, help="Output processed CSV path.")
     parser.add_argument("--per-class", type=int, default=600, help="Samples per class for synthetic baseline.")
     args = parser.parse_args()
@@ -140,6 +191,8 @@ def main() -> None:
     raw_path = args.raw or (RAW_DEFAULT if RAW_DEFAULT.exists() else None)
     if raw_path is not None:
         rows = prepare_from_raw(raw_path, invert_labels=args.invert_labels)
+        if not args.no_augment:
+            rows = augment_benign_url_diversity(rows)
         source_desc = str(raw_path)
     else:
         rows = generate_reserved_baseline(count_per_class=args.per_class)
@@ -148,7 +201,12 @@ def main() -> None:
     write_processed_csv(rows, args.output)
     positives = sum(1 for _, label in rows if label == 1)
     negatives = len(rows) - positives
-    print(f"Prepared {len(rows)} rows ({negatives} benign, {positives} phishing) from {source_desc} -> {args.output}")
+    benign_paths = sum(1 for u, label in rows if label == 0 and u.count("/") >= 3)
+    benign_no_www = sum(1 for u, label in rows if label == 0 and "://www." not in u.lower())
+    print(
+        f"Prepared {len(rows)} rows ({negatives} benign [{benign_paths} with paths, {benign_no_www} without www], "
+        f"{positives} phishing) from {source_desc} -> {args.output}"
+    )
 
 
 if __name__ == "__main__":

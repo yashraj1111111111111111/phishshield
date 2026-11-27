@@ -1,19 +1,53 @@
 {
-  "evaluated_at": "2026-11-27T08:29:13.173181+00:00",
+  "evaluated_at": "2026-11-27T12:04:01.625605+00:00",
   "dataset_path": "data/processed/phishing_urls.csv",
-  "total_records": 235370,
-  "train_records": 188296,
-  "test_records": 47074,
-  "accuracy": 0.9949,
-  "precision": 0.9986,
-  "recall": 0.9894,
-  "f1_score": 0.994,
-  "false_positive_rate": 0.001,
-  "false_negative_rate": 0.0106,
+  "total_records": 355370,
+  "train_records": 284296,
+  "test_records": 71074,
+  "benign_with_paths_ratio": 0.4709,
+  "accuracy": 0.9462,
+  "precision": 0.9376,
+  "recall": 0.8676,
+  "f1_score": 0.9012,
+  "false_positive_rate": 0.0228,
+  "false_negative_rate": 0.1324,
   "confusion_matrix": {
-    "tn": 26943,
-    "fp": 27,
-    "fn": 213,
-    "tp": 19891
-  }
+    "tn": 49809,
+    "fp": 1161,
+    "fn": 2662,
+    "tp": 17442
+  },
+  "behavioral_sanity_passed": true,
+  "behavioral_sanity_probes": [
+    {
+      "url": "https://www.example.com",
+      "expected": 0,
+      "prob": 0.0054,
+      "passed": true
+    },
+    {
+      "url": "https://example.org/tools/random-url-generator/",
+      "expected": 0,
+      "prob": 0.011,
+      "passed": true
+    },
+    {
+      "url": "https://docs.example.edu/3/library/pathlib.html",
+      "expected": 0,
+      "prob": 0.0147,
+      "passed": true
+    },
+    {
+      "url": "http://198.51.100.42/verify",
+      "expected": 1,
+      "prob": 1.0,
+      "passed": true
+    },
+    {
+      "url": "http://paypal-login-secure.example/account/update",
+      "expected": 1,
+      "prob": 1.0,
+      "passed": true
+    }
+  ]
 }

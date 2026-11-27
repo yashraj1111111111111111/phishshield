@@ -1,0 +1,3 @@
+content,label,notes
+https://account-security.example/verify?urgent=true,1,reserved example domain
+https://www.example.com,0,benign reserved example domain

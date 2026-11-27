@@ -2,13 +2,24 @@
 from __future__ import annotations
 
 import html
+import importlib
 import uuid
 
 import streamlit as st
 from fastapi import HTTPException
 
+import app.detectors.scanner as _scanner_mod
+import app.services.explainer as _explainer_mod
+import app.services.scan_pipeline as _pipeline_mod
 from app.database.connection import initialize_database
-from app.services.scan_pipeline import ScanOutcome, run_scan_pipeline
+
+if "technical_details" not in getattr(_pipeline_mod.ScanOutcome, "__dataclass_fields__", {}):
+    importlib.reload(_scanner_mod)
+    importlib.reload(_explainer_mod)
+    _pipeline_mod = importlib.reload(_pipeline_mod)
+
+ScanOutcome = _pipeline_mod.ScanOutcome
+run_scan_pipeline = _pipeline_mod.run_scan_pipeline
 
 st.set_page_config(page_title="PhishShield — Check Before You Click", page_icon="🛡️", layout="wide")
 
@@ -512,8 +523,15 @@ COPY = {
     },
 }
 
+def _make_sample_outcome(*, technical_details: dict, **kwargs) -> ScanOutcome:
+    """Construct ScanOutcome without failing if an older cached class lacks technical_details."""
+    outcome = ScanOutcome(**kwargs)
+    outcome.technical_details = technical_details
+    return outcome
+
+
 SAMPLE_OUTCOMES = {
-    "Low Risk": ScanOutcome(
+    "Low Risk": _make_sample_outcome(
         scan_reference="261127000101",
         risk_score=0,
         risk_level="Low Risk",
@@ -539,7 +557,7 @@ SAMPLE_OUTCOMES = {
             "triggered_rules": [],
         },
     ),
-    "Suspicious": ScanOutcome(
+    "Suspicious": _make_sample_outcome(
         scan_reference="261127000102",
         risk_score=40,
         risk_level="Suspicious",
@@ -571,7 +589,7 @@ SAMPLE_OUTCOMES = {
             ],
         },
     ),
-    "Dangerous": ScanOutcome(
+    "Dangerous": _make_sample_outcome(
         scan_reference="261127000103",
         risk_score=100,
         risk_level="Dangerous",

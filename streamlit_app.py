@@ -214,28 +214,188 @@ def _build_css(theme_name: str) -> str:
     color: {p['heading']};
   }}
   .ps-trust-chip span {{ display: block; font-size: 10px; color: {p['subtle']}; margin-top: 2px; }}
-  .ps-hero-card {{
+  .ps-hero-art {{
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 220px;
+  }}
+  .ps-glow-teal {{
+    position: absolute;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(24, 217, 210, 0.28), transparent 70%);
+    filter: blur(22px);
+    transform: translate(-36px, -24px);
+    pointer-events: none;
+  }}
+  .ps-glow-purple {{
+    position: absolute;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.24), transparent 70%);
+    filter: blur(22px);
+    transform: translate(36px, 28px);
+    pointer-events: none;
+  }}
+  .ps-float-pill {{
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: {p['card']};
+    border: 1px solid {p['border']};
+    color: {p['heading']};
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 8px 22px rgba(2, 8, 20, 0.28);
+  }}
+  .ps-float-top {{ top: 10px; right: 6px; }}
+  .ps-float-bottom {{ bottom: 10px; left: 6px; }}
+  .ps-result-card {{
     background: {p['card_grad']};
     border: 1px solid {p['border']};
     border-radius: 16px;
-    padding: 22px;
-    text-align: center;
-    box-shadow: 0 14px 36px rgba(2, 8, 20, 0.14);
+    padding: 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 16px 38px rgba(2, 8, 20, 0.22);
   }}
-  .ps-hero-shield {{
-    width: 72px;
-    height: 78px;
-    margin: 0 auto 12px;
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, rgba(24, 217, 210, 0.15), rgba(168, 85, 247, 0.15));
-    border: 1px solid rgba(24, 217, 210, 0.4);
-    clip-path: polygon(50% 0, 91% 16%, 88% 66%, 50% 100%, 12% 66%, 9% 16%);
-    color: #18D9D2;
-    font-size: 28px;
-    font-weight: 800;
+  .ps-result-card.tone-low {{ border-color: rgba(112, 221, 189, 0.35); }}
+  .ps-result-card.tone-suspicious {{ border-color: rgba(255, 206, 119, 0.4); }}
+  .ps-result-card.tone-dangerous {{ border-color: rgba(255, 139, 137, 0.45); }}
+  .ps-result-topline {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: {p['subtle']};
+    margin-bottom: 14px;
   }}
-  .ps-hero-card p {{ font-size: 12px; color: {p['muted']}; margin: 4px 0 0; }}
+  .ps-type-pill {{
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: {p['accent_soft']};
+    border: 1px solid rgba(24, 217, 210, 0.3);
+    color: {p['accent']};
+    font-size: 10px;
+  }}
+  .ps-verdict-row {{
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 16px;
+  }}
+  .ps-verdict-badge {{
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }}
+  .ps-verdict-badge.tone-low {{ background: rgba(112, 221, 189, 0.14); color: {p['low']}; }}
+  .ps-verdict-badge.tone-suspicious {{ background: rgba(255, 206, 119, 0.14); color: {p['suspicious']}; }}
+  .ps-verdict-badge.tone-dangerous {{ background: rgba(255, 139, 137, 0.14); color: {p['dangerous']}; }}
+  .ps-verdict-copy h4 {{ margin: 0 0 4px; font-size: 17px; color: {p['heading']}; }}
+  .ps-verdict-copy p {{ margin: 0; font-size: 12.5px; color: {p['muted']}; }}
+  .ps-explanation-card {{
+    background: {p['input_bg']};
+    border: 1px solid {p['border']};
+    border-radius: 12px;
+    padding: 13px 15px;
+    margin-bottom: 12px;
+  }}
+  .ps-explanation-card span {{
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: {p['accent']};
+    margin-bottom: 4px;
+  }}
+  .ps-explanation-card p {{ margin: 0; font-size: 13px; line-height: 1.55; color: {p['text']}; }}
+  .ps-unverified-callout {{
+    padding: 10px 13px;
+    border-radius: 10px;
+    background: rgba(112, 221, 189, 0.08);
+    border: 1px solid rgba(112, 221, 189, 0.25);
+    font-size: 12px;
+    line-height: 1.5;
+    color: {p['muted']};
+    margin-bottom: 12px;
+  }}
+  .ps-campaign-pill {{
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(255, 139, 137, 0.12);
+    border: 1px solid rgba(255, 139, 137, 0.35);
+    color: {p['dangerous']};
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }}
+  .ps-evidence-title {{
+    font-size: 12px;
+    font-weight: 700;
+    color: {p['heading']};
+    margin: 10px 0 6px;
+  }}
+  .ps-evidence-list {{
+    margin: 0 0 12px;
+    padding-left: 18px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: {p['text']};
+  }}
+  .ps-ml-box {{
+    padding-top: 10px;
+    border-top: 1px solid {p['border']};
+    margin-bottom: 10px;
+  }}
+  .ps-ml-head {{
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: {p['muted']};
+    margin-bottom: 6px;
+  }}
+  .ps-ml-track {{
+    height: 7px;
+    border-radius: 999px;
+    background: {p['track']};
+    overflow: hidden;
+  }}
+  .ps-ml-fill {{
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #18D9D2 0%, #A855F7 100%);
+  }}
+  .ps-ref-row {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid {p['border']};
+    font-size: 11px;
+    color: {p['subtle']};
+  }}
+  .ps-ref-row code {{
+    color: {p['accent']};
+    font-weight: 700;
+    font-size: 12px;
+  }}
+  [data-testid="stAlert"] {{
+    background: {p['card']} !important;
+    border: 1px solid {p['border']} !important;
+    border-radius: 10px !important;
+    color: {p['text']} !important;
+  }}
   .ps-section-divider {{
     border-top: 1px solid {p['border']};
     margin: 24px 0 20px;
@@ -383,10 +543,10 @@ COPY = {
         "tagline": "CHECK BEFORE YOU CLICK.",
         "private": "Private by design",
         "theme_labels": {"Dark": "🌙 Dark", "Light": "☀️ Light"},
-        "eyebrow": "A calmer way to check suspicious messages",
-        "hero_top": "A second look",
-        "hero_accent": "before you click.",
-        "hero_sub": "Paste a suspicious link or message. We’ll look for warning signs without ever opening the link.",
+        "eyebrow": "PRIVATE BY DESIGN",
+        "hero_top": "Check before",
+        "hero_accent": "you click.",
+        "hero_sub": "Suspicious link? Unexpected message? Check it before you trust it.",
         "trust": [
             ("Zero-click", "Text analysis only"),
             ("English & हिन्दी", "Clear explanations"),
@@ -626,33 +786,94 @@ SAMPLE_OUTCOMES = {
 }
 
 
-def _render_gauge(outcome: ScanOutcome, score_label: str, mode_badge: str, theme_name: str) -> str:
+def _render_result_card(outcome: ScanOutcome, t: dict, mode_badge: str, theme_name: str) -> str:
     p = THEMES.get(theme_name, THEMES["Dark"])
     score = max(0, min(100, int(outcome.risk_score)))
-    radius = 48
+    radius = 52
     circ = 2 * 3.14159265 * radius
     progress = circ * (score / 100.0)
-    color = p["low"] if outcome.risk_level == "Low Risk" else (p["suspicious"] if outcome.risk_level == "Suspicious" else p["dangerous"])
+    if outcome.risk_level == "Low Risk":
+        tone = "tone-low"
+        color = p["low"]
+        badge_lbl = "Low Risk (Unverified)"
+        headline = "No strong red flags found."
+        sub = "Low Risk (Unverified) does not prove authenticity or safety."
+    elif outcome.risk_level == "Suspicious":
+        tone = "tone-suspicious"
+        color = p["suspicious"]
+        badge_lbl = "Suspicious"
+        headline = "Take a closer look."
+        sub = "Some details deserve caution."
+    else:
+        tone = "tone-dangerous"
+        color = p["dangerous"]
+        badge_lbl = "Dangerous"
+        headline = "Do not engage with this."
+        sub = "This has multiple high-risk signals."
+
     ref = html.escape(str(outcome.scan_reference))
     ctype = html.escape(str(outcome.content_type).upper())
     badge = html.escape(mode_badge)
-    lbl = html.escape(score_label)
+    lbl = html.escape(t["risk_score"])
+    explanation_html = html.escape(outcome.explanation)
+    reasons_html = "".join(f"<li>{html.escape(r)}</li>" for r in outcome.reasons)
+    unverified_html = (
+        '<div class="ps-unverified-callout">0/100 means no common phishing indicators were detected by this text-only scan. '
+        "New or highly convincing scams may not show visible warning signs. Verify important requests through the organisation's official app, bookmarked website, or a known contact method.</div>"
+        if outcome.risk_level == "Low Risk"
+        else ""
+    )
+    campaign_html = (
+        f'<div class="ps-campaign-pill">↗ {html.escape(t["campaign_warn"])}</div>'
+        if outcome.campaign_detected
+        else ""
+    )
+    ml_html = ""
+    if outcome.ml_probability is not None:
+        pct = max(0.0, min(100.0, float(outcome.ml_probability) * 100.0))
+        ml_html = (
+            f'<div class="ps-ml-box">'
+            f'<div class="ps-ml-head"><span>ML confidence signal (supporting evidence only)</span><b>{pct:.1f}%</b></div>'
+            f'<div class="ps-ml-track"><div class="ps-ml-fill" style="width:{pct:.1f}%"></div></div>'
+            f"</div>"
+        )
+
     return f"""
-    <div class="ps-gauge-wrap">
-      <div class="ps-gauge">
-        <svg viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="{radius}" fill="none" stroke="{p['track']}" stroke-width="8" />
-          <circle cx="60" cy="60" r="{radius}" fill="none" stroke="{color}" stroke-width="8"
-            stroke-linecap="round" stroke-dasharray="{progress:.1f} {circ:.1f}" />
-        </svg>
-        <div class="ps-gauge-center">
-          <strong>{score}<small>/100</small></strong>
-          <span>{lbl}</span>
+    <div class="ps-result-card {tone}">
+      <div class="ps-result-topline">
+        <span>✦ RISK OVERVIEW · {badge}</span>
+        <span class="ps-type-pill">{ctype}</span>
+      </div>
+      <div class="ps-verdict-row">
+        <div class="ps-gauge">
+          <svg viewBox="0 0 128 128">
+            <circle cx="64" cy="64" r="{radius}" fill="none" stroke="{p['track']}" stroke-width="8" />
+            <circle cx="64" cy="64" r="{radius}" fill="none" stroke="{color}" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="{progress:.1f} {circ:.1f}" />
+          </svg>
+          <div class="ps-gauge-center">
+            <strong>{score}<small>/100</small></strong>
+            <span>{lbl}</span>
+          </div>
+        </div>
+        <div class="ps-verdict-copy">
+          <span class="ps-verdict-badge {tone}">{badge_lbl}</span>
+          <h4>{headline}</h4>
+          <p>{sub}</p>
         </div>
       </div>
-      <div>
-        <div class="ps-ref-pill">{badge} • SCAN REF: {ref}</div>
-        <div style="margin-top:6px;font-size:13px;color:{p['muted']};">Type: <b>{ctype}</b></div>
+      <div class="ps-explanation-card">
+        <span>IN PLAIN LANGUAGE</span>
+        <p>{explanation_html}</p>
+      </div>
+      {unverified_html}
+      {campaign_html}
+      <div class="ps-evidence-title">{html.escape(t['evidence_heading'])} ({len(outcome.reasons)})</div>
+      <ul class="ps-evidence-list">{reasons_html}</ul>
+      {ml_html}
+      <div class="ps-ref-row">
+        <span>SCAN REFERENCE</span>
+        <code>{ref}</code>
       </div>
     </div>
     """
@@ -705,7 +926,18 @@ with top_left:
         f"""
         <div class="ps-topbar">
           <div class="ps-brand">
-            <span class="ps-brand-mark">🛡️</span>
+            <span class="ps-brand-mark">
+              <svg width="24" height="26" viewBox="0 0 36 40" fill="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="st-sg" x1="0" y1="0" x2="36" y2="40" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#18D9D2"/>
+                    <stop offset="100%" stop-color="#A855F7"/>
+                  </linearGradient>
+                </defs>
+                <path d="M18 2 33 8.5v10c0 9.6-6.7 15.8-15 19.5C9.7 34.3 3 28.1 3 18.5v-10L18 2Z" stroke="url(#st-sg)" stroke-width="2.4" fill="none"/>
+                <path d="m12 20 4.2 4.2L24.5 16" stroke="#18D9D2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
             <div>phish<span class="accent">shield</span><small>{html.escape(t['tagline'])}</small></div>
           </div>
           <span class="ps-privacy-pill"><span class="ps-dot"></span>{html.escape(t['private'])}</span>
@@ -727,10 +959,28 @@ st.markdown(
         <p class="ps-hero-sub">{html.escape(t['hero_sub'])}</p>
         <div class="ps-trust-row">{trust_html}</div>
       </div>
-      <div class="ps-hero-card">
-        <div class="ps-hero-shield">✓</div>
-        <b>{html.escape(t['hero_card_title'])}</b>
-        <p>{html.escape(t['hero_card_sub'])}</p>
+      <div class="ps-hero-art">
+        <div class="ps-glow-teal"></div>
+        <div class="ps-glow-purple"></div>
+        <svg width="150" height="166" viewBox="0 0 160 176" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="st-hg1" x1="0" y1="0" x2="160" y2="176" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#18D9D2" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="#A855F7" stop-opacity="0.14"/>
+            </linearGradient>
+            <linearGradient id="st-hg2" x1="0" y1="0" x2="160" y2="176" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#18D9D2"/>
+              <stop offset="60%" stop-color="#18D9D2"/>
+              <stop offset="100%" stop-color="#A855F7"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="80" cy="90" rx="68" ry="72" fill="none" stroke="#18D9D2" stroke-width="1" stroke-opacity="0.18"/>
+          <ellipse cx="80" cy="90" rx="52" ry="56" fill="none" stroke="#A855F7" stroke-width="0.9" stroke-opacity="0.16"/>
+          <path d="M80 8 148 36v44c0 42-29.4 68.3-68 84C41.4 148.3 12 122 12 80V36L80 8Z" fill="url(#st-hg1)" stroke="url(#st-hg2)" stroke-width="2"/>
+          <path d="m54 92 18 18 34-34" stroke="url(#st-hg2)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="ps-float-pill ps-float-top">{html.escape(t['hero_card_title'])}</div>
+        <div class="ps-float-pill ps-float-bottom">Signals, made simple</div>
       </div>
     </section>
     """,
@@ -811,7 +1061,7 @@ with col_result:
         mode_badge = t["preview_badge"]
 
     if display_outcome is not None:
-        st.markdown(_render_gauge(display_outcome, t["risk_score"], mode_badge, theme_choice), unsafe_allow_html=True)
+        st.markdown(_render_result_card(display_outcome, t, mode_badge, theme_choice), unsafe_allow_html=True)
 
         if display_outcome.risk_level == "Dangerous":
             st.error(f"Verdict: **{display_outcome.risk_level}** ({display_outcome.risk_score}/100)")
@@ -819,23 +1069,9 @@ with col_result:
             st.warning(f"Verdict: **{display_outcome.risk_level}** ({display_outcome.risk_score}/100)")
         else:
             st.success(f"Verdict: **Low Risk (Unverified)** ({display_outcome.risk_score}/100)")
-            st.caption(
-                "0/100 means no common phishing indicators were detected by this text-only scan. "
-                "It does not prove that this website or message is genuine—verify important requests through the organisation's official app, bookmarked website, or a known contact method."
-            )
 
-        if display_outcome.campaign_detected:
-            st.warning(t["campaign_warn"])
-
-        st.info(display_outcome.explanation)
-
-        st.markdown(f"**{t['evidence_heading']}**")
-        for reason in display_outcome.reasons:
-            st.markdown(f"- {reason}")
-
-        if display_outcome.ml_probability is not None:
-            st.progress(max(0.0, min(1.0, float(display_outcome.ml_probability))))
-            st.caption(t["ml_caption"].format(pct=display_outcome.ml_probability * 100))
+        if lang_code == "hi":
+            st.info(display_outcome.explanation)
 
         td = getattr(display_outcome, "technical_details", None) or {}
         if td:

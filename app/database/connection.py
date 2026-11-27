@@ -1,12 +1,12 @@
 import sqlite3
 from pathlib import Path
 
-from app.config import DATABASE_PATH
+from app import config
 
 
 def get_connection() -> sqlite3.Connection:
-    Path(DATABASE_PATH).parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(DATABASE_PATH)
+    Path(config.DATABASE_PATH).parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(config.DATABASE_PATH)
     connection.row_factory = sqlite3.Row
     return connection
 

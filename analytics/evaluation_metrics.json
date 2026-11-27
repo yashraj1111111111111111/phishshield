@@ -1,0 +1,19 @@
+{
+  "evaluated_at": "2026-11-27T08:29:13.173181+00:00",
+  "dataset_path": "data/processed/phishing_urls.csv",
+  "total_records": 235370,
+  "train_records": 188296,
+  "test_records": 47074,
+  "accuracy": 0.9949,
+  "precision": 0.9986,
+  "recall": 0.9894,
+  "f1_score": 0.994,
+  "false_positive_rate": 0.001,
+  "false_negative_rate": 0.0106,
+  "confusion_matrix": {
+    "tn": 26943,
+    "fp": 27,
+    "fn": 213,
+    "tp": 19891
+  }
+}

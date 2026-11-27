@@ -19,5 +19,7 @@ button:disabled { opacity: .6; cursor: wait; }
 .score { display: grid; align-content: start; gap: 8px; }.score span { font-weight: 800; }.score strong { font-size: 3rem; line-height: 1; }.score small { font-size: 1rem; color: #91a2bc; }
 .dangerous .score span { color: #ff8b89; }.suspicious .score span { color: #ffce77; }.safe .score span { color: #70ddbd; }
 h2 { font-size: 1.1rem; margin-top: 8px; } li, .explanation { color: #bdc9dc; line-height: 1.55; }.explanation { border-left: 3px solid #70ddbd; padding-left: 14px; margin-top: 20px; }
+.ml-signal { color: #91a2bc; font-size: .9rem; margin-top: 12px; }
+.campaign-tag { display: inline-block; margin: 8px 0 0; padding: 4px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; color: #ffce77; background: rgba(255, 206, 119, .14); border: 1px solid rgba(255, 206, 119, .35); }
 footer { color: #7789a3; font-size: .86rem; margin: 30px 3px; }
 @media (max-width: 560px) { main { padding-top: 44px; }.result { grid-template-columns: 1fr; gap: 12px; }.actions { justify-content: stretch; }.actions > * { flex: 1; } }

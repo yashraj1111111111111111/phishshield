@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { DEFAULT_API_URL, submitScan } from "./api.js";
 import "./styles.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
 
 function App() {
   const [content, setContent] = useState("");
@@ -15,12 +16,7 @@ function App() {
     event.preventDefault();
     setError(""); setResult(null); setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/scan`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, language })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || "Unable to scan this content.");
+      const data = await submitScan({ content, language, apiUrl: API_URL });
       setResult(data);
     } catch (err) {
       setError(err.message);
@@ -44,10 +40,19 @@ function App() {
           <button disabled={loading}>{loading ? "Checking…" : "Check safely"}</button>
         </div>
       </form>
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error" role="alert">{error}</p>}
       {result && <article className={`result ${result.risk_level.toLowerCase()}`}>
         <div className="score"><span>{result.risk_level}</span><strong>{result.risk_score}<small>/100</small></strong></div>
-        <div className="details"><p className="reference">SCAN REF: {result.scan_reference}</p><h2>Why this was flagged</h2><ul>{result.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul><p className="explanation">{result.explanation}</p></div>
+        <div className="details">
+          <p className="reference">SCAN REF: {result.scan_reference}</p>
+          {result.campaign_detected && <p className="campaign-tag">Repeated scam/campaign pattern detected</p>}
+          <h2>Why this was flagged</h2>
+          <ul>{result.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+          {result.ml_probability !== null && result.ml_probability !== undefined && (
+            <p className="ml-signal">ML confidence signal: {(result.ml_probability * 100).toFixed(1)}% phishing similarity (supporting evidence only)</p>
+          )}
+          <p className="explanation">{result.explanation}</p>
+        </div>
       </article>}
     </section>
     <footer>PhishShield analyzes text only. A low score is not a guarantee of safety.</footer>

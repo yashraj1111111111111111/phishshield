@@ -24,3 +24,18 @@ def save_security_event(client_hash: str, event_type: str, request_count: int, a
                VALUES (?, ?, ?, ?, ?)""",
             (client_hash, event_type, request_count, datetime.now(timezone.utc).isoformat(), action_taken),
         )
+
+
+def fetch_recent_scans(window_minutes: int = 15, limit: int = 200) -> list[tuple[str, str]]:
+    """Return recent (content_type, submitted_content) pairs within the trailing window."""
+    modifier = f"-{max(1, int(window_minutes))} minutes"
+    with get_connection() as connection:
+        rows = connection.execute(
+            """SELECT content_type, submitted_content
+               FROM scans
+               WHERE created_at >= datetime('now', ?)
+               ORDER BY id DESC
+               LIMIT ?""",
+            (modifier, limit),
+        ).fetchall()
+    return [(row["content_type"], row["submitted_content"]) for row in rows]

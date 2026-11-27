@@ -24,7 +24,7 @@ test("submitScan surfaces friendly 429 rate-limit detail", async () => {
             status: 429,
           }),
       }),
-    /Too many scan requests/,
+    (err) => err.status === 429 && /Too many scan requests/.test(err.message),
   );
 });
 

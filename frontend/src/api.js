@@ -34,7 +34,9 @@ export async function submitScan({ content, language, apiUrl = DEFAULT_API_URL, 
       response.status === 429
         ? "Too many scan requests. Please wait one minute and try again."
         : "Unable to scan this content.";
-    throw new Error(extractErrorMessage(data, fallback));
+    const error = new Error(extractErrorMessage(data, fallback));
+    error.status = response.status;
+    throw error;
   }
   return data;
 }

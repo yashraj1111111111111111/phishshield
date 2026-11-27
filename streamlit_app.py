@@ -15,8 +15,8 @@ st.set_page_config(page_title="PhishShield — Check Before You Click", page_ico
 THEMES = {
     "Dark": {
         "bg": "#07111f",
-        "bg_grad": "rgba(35, 91, 110, 0.22)",
-        "header_bg": "rgba(7, 17, 31, 0.88)",
+        "bg_grad": "rgba(24, 217, 210, 0.16)",
+        "header_bg": "rgba(7, 17, 31, 0.92)",
         "card": "#0b1c31",
         "card_hover": "#132a46",
         "card_grad": "linear-gradient(145deg, #0e243b, #091829)",
@@ -26,11 +26,12 @@ THEMES = {
         "heading": "#f3f7fa",
         "muted": "#9eb0c0",
         "subtle": "#8da2b3",
-        "accent": "#70ddbd",
-        "accent_ink": "#06211b",
-        "accent_soft": "rgba(112, 221, 189, 0.12)",
-        "border": "rgba(160, 190, 215, 0.18)",
-        "track": "#21364a",
+        "accent": "#18D9D2",
+        "accent_purple": "#A855F7",
+        "accent_ink": "#07111f",
+        "accent_soft": "rgba(24, 217, 210, 0.12)",
+        "border": "rgba(24, 217, 210, 0.15)",
+        "track": "#132a46",
         "low": "#70ddbd",
         "suspicious": "#ffce77",
         "dangerous": "#ff8b89",
@@ -96,6 +97,16 @@ def _build_css(theme_name: str) -> str:
     padding-bottom: 14px;
     border-bottom: 1px solid {p['border']};
     margin-bottom: 18px;
+    position: relative;
+  }}
+  .ps-topbar::after {{
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, #18D9D2, #A855F7 60%, transparent);
   }}
   .ps-brand {{
     display: flex;
@@ -110,8 +121,8 @@ def _build_css(theme_name: str) -> str:
     border-radius: 11px;
     display: grid;
     place-items: center;
-    background: {p['accent_soft']};
-    border: 1px solid {p['accent']};
+    background: linear-gradient(135deg, rgba(24, 217, 210, 0.2), rgba(168, 85, 247, 0.2));
+    border: 1px solid rgba(24, 217, 210, 0.4);
     color: {p['accent']};
   }}
   .ps-brand small {{
@@ -121,7 +132,11 @@ def _build_css(theme_name: str) -> str:
     font: 700 9px/1 'DM Sans', sans-serif;
     letter-spacing: 1.7px;
   }}
-  .ps-brand .accent {{ color: {p['accent']}; }}
+  .ps-brand .accent {{
+    background: linear-gradient(135deg, #18D9D2, #A855F7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }}
   .ps-privacy-pill {{
     display: inline-flex;
     align-items: center;
@@ -161,7 +176,12 @@ def _build_css(theme_name: str) -> str:
     margin: 0 0 12px;
     color: {p['heading']};
   }}
-  .ps-hero h1 em {{ font-style: normal; color: {p['accent']}; }}
+  .ps-hero h1 em {{
+    font-style: normal;
+    background: linear-gradient(135deg, #18D9D2 0%, #A855F7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }}
   .ps-hero-sub {{
     color: {p['muted']};
     font-size: 15px;
@@ -197,10 +217,10 @@ def _build_css(theme_name: str) -> str:
     margin: 0 auto 12px;
     display: grid;
     place-items: center;
-    background: {p['accent_soft']};
-    border: 1px solid {p['accent']};
+    background: linear-gradient(135deg, rgba(24, 217, 210, 0.15), rgba(168, 85, 247, 0.15));
+    border: 1px solid rgba(24, 217, 210, 0.4);
     clip-path: polygon(50% 0, 91% 16%, 88% 66%, 50% 100%, 12% 66%, 9% 16%);
-    color: {p['accent']};
+    color: #18D9D2;
     font-size: 28px;
     font-weight: 800;
   }}
@@ -275,10 +295,14 @@ def _build_css(theme_name: str) -> str:
   }}
   .stButton > button[kind="primary"],
   [data-testid="stFormSubmitButton"] > button {{
-    background: {p['accent']} !important;
-    color: {p['accent_ink']} !important;
+    background: linear-gradient(135deg, #18D9D2 0%, #A855F7 100%) !important;
+    color: #07111f !important;
     border: 0 !important;
     font-weight: 800 !important;
+    box-shadow: 0 4px 18px rgba(24, 217, 210, 0.25) !important;
+  }}
+  div[data-testid="stProgressBar"] > div > div {{
+    background: linear-gradient(90deg, #18D9D2 0%, #A855F7 100%) !important;
   }}
   .stButton > button:not([kind="primary"]) {{
     background: {p['card']} !important;

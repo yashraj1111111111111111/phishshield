@@ -33,3 +33,23 @@ test("OTP KYC scam message is flagged Dangerous", () => {
   assert.equal(result.risk_level, "Dangerous");
   assert.equal(result.content_type, "message");
 });
+
+test("threshold split: Suspicious (25–59) stays below Dangerous boundary", () => {
+  // bit.ly/verify should be Suspicious, not Dangerous — soft toast applies
+  const shortener = scanText("http://bit.ly/verify");
+  assert.ok(shortener.risk_score >= 25, "must meet toast threshold");
+  assert.ok(shortener.risk_score < 60, "must NOT reach hard-block threshold");
+  assert.equal(shortener.risk_level, "Suspicious");
+});
+
+test("threshold split: raw IP link (60+) reaches hard-block Dangerous boundary", () => {
+  const dangerous = scanText("http://198.51.100.42/verify");
+  assert.ok(dangerous.risk_score >= 60, "must reach hard-block threshold");
+  assert.equal(dangerous.risk_level, "Dangerous");
+});
+
+test("Low Risk link (0–24) does not reach any interception threshold", () => {
+  const safe = scanText("https://www.example.com");
+  assert.ok(safe.risk_score < 25, "must not trigger toast or hard block");
+  assert.equal(safe.risk_level, "Low Risk");
+});

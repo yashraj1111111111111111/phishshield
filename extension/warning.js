@@ -2,6 +2,7 @@
   const params = new URLSearchParams(window.location.search);
   const targetUrl = params.get("url") || "";
   const sourceUrl = params.get("from") || "";
+  const isSoft = params.get("soft") === "1";  // true for Suspicious address-bar navigations
 
   const urlBox = document.getElementById("target-url");
   const verdictEl = document.getElementById("verdict");
@@ -16,6 +17,18 @@
   const proceedBtn = document.getElementById("proceed-btn");
 
   urlBox.textContent = targetUrl || "(No URL provided)";
+
+  // Soft mode: make it clear the user can proceed freely and swap button prominence
+  if (isSoft) {
+    document.querySelector("h1").textContent = "Heads up — this link looks suspicious.";
+    document.querySelector(".subtitle").textContent =
+      "PhishShield flagged this link as potentially suspicious. You can still proceed — this is an advisory notice only.";
+    // Swap visual weight: proceed is now the primary action
+    proceedBtn.className = "btn-primary";
+    backBtn.className = "btn-secondary";
+    proceedBtn.textContent = "Open link";
+    backBtn.textContent = "← Take me back";
+  }
 
   function renderResult(data) {
     const level = data.risk_level || "Suspicious";

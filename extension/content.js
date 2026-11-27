@@ -16,6 +16,111 @@
     if (changes.tempAllow) tempAllow = changes.tempAllow.newValue || {};
   });
 
+  /* ── Soft dismissible toast for Suspicious (25–59) ───────────────────── */
+  function showSuspiciousToast(url, score, openInNewTab) {
+    // Remove any existing toast first
+    const existing = document.getElementById("ps-toast");
+    if (existing) existing.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "ps-toast";
+    toast.setAttribute("role", "alertdialog");
+    toast.setAttribute("aria-label", "PhishShield suspicious link warning");
+    toast.innerHTML = `
+      <div class="ps-toast-inner">
+        <span class="ps-toast-icon">⚠</span>
+        <div class="ps-toast-body">
+          <strong>Suspicious link (${score}/100)</strong>
+          <span class="ps-toast-url">${url}</span>
+        </div>
+        <div class="ps-toast-actions">
+          <button id="ps-toast-open" type="button">Open anyway</button>
+          <button id="ps-toast-dismiss" type="button" aria-label="Dismiss">✕</button>
+        </div>
+      </div>
+    `;
+
+    // Inline critical styles so the toast works without an injected stylesheet
+    Object.assign(toast.style, {
+      position: "fixed",
+      top: "16px",
+      right: "16px",
+      zIndex: "2147483647",
+      maxWidth: "420px",
+      width: "calc(100% - 32px)",
+      background: "#09192c",
+      border: "1px solid #c97d00",
+      borderRadius: "12px",
+      boxShadow: "0 8px 32px #00000080",
+      fontFamily: "Inter,ui-sans-serif,system-ui,sans-serif",
+      fontSize: "14px",
+      color: "#e8edf8",
+      padding: "0",
+      animation: "ps-slide-in .22s ease",
+    });
+
+    // Inject keyframe once
+    if (!document.getElementById("ps-toast-styles")) {
+      const style = document.createElement("style");
+      style.id = "ps-toast-styles";
+      style.textContent = `
+        @keyframes ps-slide-in {
+          from { opacity:0; transform:translateY(-12px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+        #ps-toast .ps-toast-inner {
+          display:flex; align-items:flex-start; gap:10px; padding:14px;
+        }
+        #ps-toast .ps-toast-icon {
+          font-size:1.4em; color:#ffce77; flex-shrink:0; line-height:1.2;
+        }
+        #ps-toast .ps-toast-body {
+          flex:1; display:flex; flex-direction:column; gap:3px; min-width:0;
+        }
+        #ps-toast .ps-toast-body strong { color:#ffce77; font-size:.95em; }
+        #ps-toast .ps-toast-url {
+          color:#8fa3bf; font-size:.78em; white-space:nowrap;
+          overflow:hidden; text-overflow:ellipsis;
+        }
+        #ps-toast .ps-toast-actions {
+          display:flex; gap:6px; flex-shrink:0; align-items:flex-start;
+        }
+        #ps-toast button {
+          font:inherit; border-radius:8px; border:0; cursor:pointer;
+          font-weight:700; padding:6px 10px; font-size:.8em; white-space:nowrap;
+        }
+        #ps-toast #ps-toast-open {
+          background:transparent; color:#ffce77; border:1px solid #6b520a;
+        }
+        #ps-toast #ps-toast-dismiss {
+          background:transparent; color:#8fa3bf; border:1px solid #223952;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(toast);
+
+    let autoDismissTimer = setTimeout(() => toast.remove(), 15000);
+
+    document.getElementById("ps-toast-dismiss").addEventListener("click", () => {
+      clearTimeout(autoDismissTimer);
+      toast.remove();
+    });
+
+    document.getElementById("ps-toast-open").addEventListener("click", () => {
+      clearTimeout(autoDismissTimer);
+      toast.remove();
+      chrome.runtime.sendMessage({ type: "ALLOW_URL_ONCE", url }, () => {
+        if (openInNewTab) {
+          window.open(url, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.href = url;
+        }
+      });
+    });
+  }
+
   document.addEventListener(
     "click",
     (event) => {
@@ -31,14 +136,22 @@
       if (!scanner) return;
 
       const result = scanner.scanText(anchor.href);
-      if (result.risk_score >= 25) {
+      const isNewTab = anchor.target === "_blank" || event.metaKey || event.ctrlKey;
+
+      if (result.risk_score >= 60) {
+        // Dangerous → full-page warning.html block
         event.preventDefault();
         event.stopPropagation();
         chrome.runtime.sendMessage({
           type: "OPEN_WARNING",
           url: anchor.href,
-          newTab: anchor.target === "_blank" || event.metaKey || event.ctrlKey,
+          newTab: isNewTab,
         });
+      } else if (result.risk_score >= 25) {
+        // Suspicious → soft dismissible in-page toast
+        event.preventDefault();
+        event.stopPropagation();
+        showSuspiciousToast(anchor.href, result.risk_score, isNewTab);
       }
     },
     true,

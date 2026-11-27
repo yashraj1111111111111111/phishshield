@@ -81,8 +81,17 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (await isTemporarilyAllowed(details.url)) return;
 
   const localResult = globalThis.PhishShieldScanner.scanText(details.url);
-  if (localResult.risk_score >= 25) {
+  // Suspicious (25–59): the in-page toast in content.js handles click-triggered
+  // navigations. onBeforeNavigate catches address-bar / programmatic navigations
+  // that content.js cannot intercept — apply the full block at 60+ only, and
+  // soft-block 25–59 by redirecting to warning.html with a ?soft=1 flag so
+  // warning.js can render a lighter "proceed easily" variant.
+  if (localResult.risk_score >= 60) {
     await chrome.tabs.update(details.tabId, { url: buildWarningUrl(details.url) });
+  } else if (localResult.risk_score >= 25) {
+    await chrome.tabs.update(details.tabId, {
+      url: buildWarningUrl(details.url) + "&soft=1",
+    });
   }
 });
 

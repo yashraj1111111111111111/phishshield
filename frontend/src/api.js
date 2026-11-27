@@ -11,9 +11,10 @@ export function extractErrorMessage(data, fallback = "Unable to scan this conten
 }
 
 export async function submitScan({ content, language, apiUrl = DEFAULT_API_URL, fetchImpl = fetch }) {
+  const baseUrl = String(apiUrl || DEFAULT_API_URL).replace(/\/+$/, "");
   let response;
   try {
-    response = await fetchImpl(`${apiUrl}/api/scan`, {
+    response = await fetchImpl(`${baseUrl}/api/scan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content, language }),

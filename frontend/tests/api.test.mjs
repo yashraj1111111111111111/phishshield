@@ -3,13 +3,19 @@ import assert from "node:assert/strict";
 
 import { extractErrorMessage, submitScan } from "../src/api.js";
 
-test("submitScan returns parsed scan result on 200 OK", async () => {
+test("submitScan returns parsed scan result on 200 OK and trims trailing apiUrl slashes", async () => {
   const payload = { scan_reference: "261127000001", risk_score: 0, risk_level: "Low Risk" };
+  let requestedUrl = "";
   const result = await submitScan({
     content: "https://www.example.com",
     language: "en",
-    fetchImpl: async () => new Response(JSON.stringify(payload), { status: 200 }),
+    apiUrl: "https://phishshield-api.onrender.com/",
+    fetchImpl: async (url) => {
+      requestedUrl = url;
+      return new Response(JSON.stringify(payload), { status: 200 });
+    },
   });
+  assert.equal(requestedUrl, "https://phishshield-api.onrender.com/api/scan");
   assert.deepEqual(result, payload);
 });
 

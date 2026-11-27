@@ -47,7 +47,19 @@ streamlit run streamlit_app.py
 
 For Streamlit Community Cloud, point the app to `streamlit_app.py` on `main`. Theme defaults are configured in `.streamlit/config.toml` with a live Dark/Light toggle in the UI.
 
-### 4. Browser Extension (Chrome / Edge MV3)
+### 4. Deploy Exact React + FastAPI UI Online (Vercel + Render)
+
+To host the exact React interface (`frontend/`) publicly instead of Streamlit:
+
+1. **Deploy the FastAPI backend (`render.yaml`):**
+   - Create a new **Blueprint** or **Web Service** on [Render](https://render.com) connected to this GitHub repository (Render automatically reads `render.yaml`).
+   - Wait for the service to go live and copy its URL (for example `https://phishshield-api.onrender.com`).
+2. **Deploy the React frontend (`frontend/vercel.json`):**
+   - Import this GitHub repository on [Vercel](https://vercel.com) and set **Root Directory** to `frontend`.
+   - Add environment variable `VITE_API_URL` = your Render backend URL (e.g. `https://phishshield-api.onrender.com`).
+   - Deploy. `*.vercel.app` and `*.netlify.app` origins are already allowed by `CORS_ALLOW_ORIGIN_REGEX` (custom domains can be added via `CORS_ALLOW_ORIGINS`).
+
+### 5. Browser Extension (Chrome / Edge MV3)
 
 1. Open `chrome://extensions` (or `edge://extensions`) and enable **Developer mode**.
 2. Click **Load unpacked** and select `extension/`.
@@ -66,6 +78,8 @@ For Streamlit Community Cloud, point the app to `streamlit_app.py` on `main`. Th
 | `TRUST_PROXY_HEADERS` | `false` | Trust left-most `X-Forwarded-For` IP only behind a trusted proxy |
 | `STORE_SCAN_CONTENT` | `false` | Persist raw submitted text in `scans` (`false` stores `"[redacted]"`) |
 | `SCAN_RETENTION_DAYS` | `30` | Days before `scans`, `scan_fingerprints`, and `security_events` auto-purge (`0` disables) |
+| `CORS_ALLOW_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated allowed CORS origins for FastAPI |
+| `CORS_ALLOW_ORIGIN_REGEX` | `^(chrome-extension://.*\|https://.*\.vercel\.app\|https://.*\.netlify\.app)$` | Regex for extension and preview/hosted frontend origins |
 | `VITE_API_URL` | `http://127.0.0.1:8001` | Frontend API base URL override |
 
 ## API Reference

@@ -214,6 +214,10 @@ const COPY = {
     footerDesc: "Helping students, parents & families pause before they trust.",
     themeLight: "Light",
     themeDark: "Dark",
+    quickCheckTab: "Quick Check",
+    quickCheckTitle: "Quick Message & Link Check",
+    quickCheckSub: "Test any URL or message without scrolling down.",
+    viewFullResult: "View full breakdown & Technical details",
   },
   hi: {
     tagline: "क्लिक करने से पहले जाँचें।",
@@ -328,6 +332,10 @@ const COPY = {
     footerDesc: "छात्रों, माता-पिता और परिवारों को क्लिक करने से पहले रुककर सोचने में मदद।",
     themeLight: "लाइट",
     themeDark: "डार्क",
+    quickCheckTab: "त्वरित जाँच",
+    quickCheckTitle: "त्वरित संदेश व लिंक जाँच",
+    quickCheckSub: "नीचे स्क्रॉल किए बिना यहीं से संदेश या लिंक जाँचें।",
+    viewFullResult: "पूरा विवरण व Technical details देखें",
   },
 };
 
@@ -458,6 +466,7 @@ export default function PhishShield() {
   const [preview,  setPreview]  = useState("dangerous");
   const [copied,   setCopied]   = useState(false);
   const [selectedDemo, setSelectedDemo] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
@@ -547,6 +556,13 @@ export default function PhishShield() {
           </span>
         </a>
         <div className="topbar-right">
+          <button
+            type="button"
+            className="quick-nav-btn"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Icon name="shield" size={14}/> {t.quickCheckTab}
+          </button>
           <span className="privacy-mini">
             <span className="privacy-dot" aria-hidden="true"/>
             {t.privateBadge}
@@ -1022,6 +1038,100 @@ export default function PhishShield() {
         <span>{t.footerDesc}</span>
         <span className="footer-tag">{t.tagline}</span>
       </footer>
+
+      {/* PERSISTENT QUICK-TEST SIDEBAR ────────────────────────────────────── */}
+      <button
+        type="button"
+        className="sidebar-edge-tab"
+        onClick={() => setSidebarOpen(true)}
+        aria-label={t.quickCheckTitle}
+      >
+        <Icon name="shield" size={15}/>
+        <span>{t.quickCheckTab}</span>
+      </button>
+
+      {sidebarOpen && (
+        <div className="quick-sidebar-backdrop" onClick={() => setSidebarOpen(false)} aria-hidden="true"/>
+      )}
+
+      <aside className={`quick-sidebar${sidebarOpen ? " open" : ""}`} aria-label={t.quickCheckTitle} aria-hidden={!sidebarOpen}>
+        <div className="quick-sidebar-header">
+          <div>
+            <span className="step-label">{t.yourCheck}</span>
+            <h3>{t.quickCheckTitle}</h3>
+            <p>{t.quickCheckSub}</p>
+          </div>
+          <button type="button" className="quick-close-btn" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
+            <Icon name="close" size={18}/>
+          </button>
+        </div>
+
+        <div className="quick-sidebar-body">
+          <div className="demo-chips">
+            {DEMOS.map(demo => (
+              <button
+                type="button"
+                key={`sb-${demo.id}`}
+                className={`demo-chip ${demo.kind}${selectedDemo === demo.id ? " chip-selected" : ""}`}
+                onClick={() => useDemo(demo)}
+              >
+                {t.demoLabels[demo.id]}<span className="chip-arrow">↗</span>
+              </button>
+            ))}
+          </div>
+
+          <form className="input-card quick-input-card" onSubmit={handleScan}>
+            <label htmlFor="quick-scan-content" className="sr-only">{t.placeholder}</label>
+            <textarea
+              id="quick-scan-content"
+              minLength={3}
+              maxLength={5000}
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder={t.placeholder}
+            />
+            <div className="input-footer">
+              <span><Icon name="lock" size={13}/> {t.textOnlyNote}</span>
+              <button type="button" className="clear-button" onClick={() => { setContent(""); setError(null); setSelectedDemo(null); }}>
+                <Icon name="close" size={14}/> {t.clearBtn}
+              </button>
+            </div>
+            <button className="scan-button quick-scan-btn" type="submit" disabled={content.trim().length < 3 || loading}>
+              {loading
+                ? <><span className="spinner"/> {t.checkingBtn}</>
+                : <>{t.checkBtn} <Icon name="arrow" size={17}/></>
+              }
+            </button>
+          </form>
+
+          {error && (
+            <div className={`alert-banner ${error.type}`} role="alert">
+              <span className="alert-symbol"><Icon name="alert" size={18}/></span>
+              <div>
+                <b>{error.type === "rate" ? t.rateAlertTitle : t.offlineAlertTitle}</b>
+                <p>{error.message}</p>
+              </div>
+            </div>
+          )}
+
+          {result && tier && (
+            <div className={`quick-mini-result ${tier.tone}`}>
+              <div className="quick-mini-head">
+                <span className={`verdict-badge ${tier.tone}`}><i/> {tier.label}</span>
+                <strong>{result.risk_score}<small>/100</small></strong>
+              </div>
+              <p>{result.explanation}</p>
+              <a
+                href="#checker"
+                className="quick-full-link"
+                onClick={() => setSidebarOpen(false)}
+              >
+                {t.viewFullResult} <Icon name="arrow" size={14}/>
+              </a>
+            </div>
+          )}
+        </div>
+      </aside>
 
     </main>
   );

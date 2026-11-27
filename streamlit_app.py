@@ -73,19 +73,13 @@ def _build_css(theme_name: str) -> str:
     color: {p['text']};
     font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   }}
-  header[data-testid="stHeader"] {{
-    background: {p['header_bg']} !important;
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid {p['border']};
-  }}
-  header[data-testid="stHeader"] button,
-  header[data-testid="stHeader"] svg,
-  header[data-testid="stHeader"] a {{
-    color: {p['muted']} !important;
+  header[data-testid="stHeader"],
+  [data-testid="stToolbar"] {{
+    display: none !important;
   }}
   .block-container {{
     max-width: 1180px;
-    padding-top: 3.6rem;
+    padding-top: 1.4rem;
     padding-bottom: 2.5rem;
   }}
   h1, h2, h3, h4, .stMarkdown p, .stMarkdown li {{

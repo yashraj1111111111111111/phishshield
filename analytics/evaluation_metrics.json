@@ -1,52 +1,232 @@
 {
-  "evaluated_at": "2026-11-27T14:19:51.954633+00:00",
+  "evaluated_at": "2026-11-27T16:19:47.742923+00:00",
   "dataset_path": "data/processed/phishing_urls.csv",
+  "split_strategy": "GroupShuffleSplit by base domain (80/20, random_state=42)",
   "total_records": 355370,
-  "train_records": 284296,
-  "test_records": 71074,
+  "train_records": 284457,
+  "test_records": 70913,
+  "unique_domains": 219094,
   "benign_with_paths_ratio": 0.3886,
-  "accuracy": 0.9475,
-  "precision": 0.9327,
-  "recall": 0.8779,
-  "f1_score": 0.9045,
-  "false_positive_rate": 0.025,
-  "false_negative_rate": 0.1221,
+  "accuracy": 0.949,
+  "precision": 0.9465,
+  "recall": 0.8665,
+  "f1_score": 0.9048,
+  "false_positive_rate": 0.019,
+  "false_negative_rate": 0.1335,
   "confusion_matrix": {
-    "tn": 49696,
-    "fp": 1274,
-    "fn": 2455,
-    "tp": 17649
+    "tn": 50116,
+    "fp": 971,
+    "fn": 2646,
+    "tp": 17180
   },
+  "subset_metrics": {
+    "original": {
+      "count": 46878,
+      "accuracy": 0.9429,
+      "precision": 0.9983,
+      "recall": 0.8665,
+      "f1_score": 0.9278,
+      "false_positive_rate": 0.0011,
+      "false_negative_rate": 0.1335,
+      "confusion_matrix": {
+        "tn": 27023,
+        "fp": 29,
+        "fn": 2646,
+        "tp": 17180
+      }
+    },
+    "augmented": {
+      "count": 24035,
+      "accuracy": 0.9608,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "false_positive_rate": 0.0392,
+      "false_negative_rate": 0.0,
+      "confusion_matrix": {
+        "tn": 23093,
+        "fp": 942,
+        "fn": 0,
+        "tp": 0
+      }
+    }
+  },
+  "threshold_sweep": [
+    {
+      "count": 70913,
+      "accuracy": 0.9118,
+      "precision": 0.7775,
+      "recall": 0.959,
+      "f1_score": 0.8588,
+      "false_positive_rate": 0.1065,
+      "false_negative_rate": 0.041,
+      "confusion_matrix": {
+        "tn": 45646,
+        "fp": 5441,
+        "fn": 812,
+        "tp": 19014
+      },
+      "threshold": 0.1
+    },
+    {
+      "count": 70913,
+      "accuracy": 0.9367,
+      "precision": 0.8482,
+      "recall": 0.9422,
+      "f1_score": 0.8927,
+      "false_positive_rate": 0.0655,
+      "false_negative_rate": 0.0578,
+      "confusion_matrix": {
+        "tn": 47743,
+        "fp": 3344,
+        "fn": 1145,
+        "tp": 18681
+      },
+      "threshold": 0.2
+    },
+    {
+      "count": 70913,
+      "accuracy": 0.9415,
+      "precision": 0.8675,
+      "recall": 0.9335,
+      "f1_score": 0.8993,
+      "false_positive_rate": 0.0553,
+      "false_negative_rate": 0.0665,
+      "confusion_matrix": {
+        "tn": 48260,
+        "fp": 2827,
+        "fn": 1319,
+        "tp": 18507
+      },
+      "threshold": 0.3
+    },
+    {
+      "count": 70913,
+      "accuracy": 0.9442,
+      "precision": 0.8828,
+      "recall": 0.9229,
+      "f1_score": 0.9024,
+      "false_positive_rate": 0.0475,
+      "false_negative_rate": 0.0771,
+      "confusion_matrix": {
+        "tn": 48658,
+        "fp": 2429,
+        "fn": 1528,
+        "tp": 18298
+      },
+      "threshold": 0.4
+    },
+    {
+      "count": 70913,
+      "accuracy": 0.949,
+      "precision": 0.9465,
+      "recall": 0.8665,
+      "f1_score": 0.9048,
+      "false_positive_rate": 0.019,
+      "false_negative_rate": 0.1335,
+      "confusion_matrix": {
+        "tn": 50116,
+        "fp": 971,
+        "fn": 2646,
+        "tp": 17180
+      },
+      "threshold": 0.5
+    },
+    {
+      "count": 70913,
+      "accuracy": 0.945,
+      "precision": 0.9756,
+      "recall": 0.824,
+      "f1_score": 0.8934,
+      "false_positive_rate": 0.008,
+      "false_negative_rate": 0.176,
+      "confusion_matrix": {
+        "tn": 50678,
+        "fp": 409,
+        "fn": 3490,
+        "tp": 16336
+      },
+      "threshold": 0.6
+    },
+    {
+      "count": 70913,
+      "accuracy": 0.944,
+      "precision": 0.9811,
+      "recall": 0.8154,
+      "f1_score": 0.8906,
+      "false_positive_rate": 0.0061,
+      "false_negative_rate": 0.1846,
+      "confusion_matrix": {
+        "tn": 50775,
+        "fp": 312,
+        "fn": 3659,
+        "tp": 16167
+      },
+      "threshold": 0.7
+    },
+    {
+      "count": 70913,
+      "accuracy": 0.9417,
+      "precision": 0.9857,
+      "recall": 0.8032,
+      "f1_score": 0.8851,
+      "false_positive_rate": 0.0045,
+      "false_negative_rate": 0.1968,
+      "confusion_matrix": {
+        "tn": 50856,
+        "fp": 231,
+        "fn": 3902,
+        "tp": 15924
+      },
+      "threshold": 0.8
+    },
+    {
+      "count": 70913,
+      "accuracy": 0.9366,
+      "precision": 0.9908,
+      "recall": 0.7805,
+      "f1_score": 0.8732,
+      "false_positive_rate": 0.0028,
+      "false_negative_rate": 0.2195,
+      "confusion_matrix": {
+        "tn": 50944,
+        "fp": 143,
+        "fn": 4352,
+        "tp": 15474
+      },
+      "threshold": 0.9
+    }
+  ],
   "behavioral_sanity_passed": true,
   "behavioral_sanity_probes": [
     {
       "url": "https://www.example.com",
       "expected": 0,
-      "prob": 0.0032,
+      "prob": 0.0039,
       "passed": true
     },
     {
       "url": "https://example.com",
       "expected": 0,
-      "prob": 0.0089,
+      "prob": 0.0217,
       "passed": true
     },
     {
       "url": "https://example.edu",
       "expected": 0,
-      "prob": 0.0089,
+      "prob": 0.0217,
       "passed": true
     },
     {
       "url": "https://example.org/tools/random-url-generator/",
       "expected": 0,
-      "prob": 0.0107,
+      "prob": 0.0178,
       "passed": true
     },
     {
       "url": "https://docs.example.edu/3/library/pathlib.html",
       "expected": 0,
-      "prob": 0.0145,
+      "prob": 0.0251,
       "passed": true
     },
     {

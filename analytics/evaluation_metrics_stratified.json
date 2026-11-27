@@ -1,0 +1,65 @@
+{
+  "evaluated_at": "2026-11-27T14:19:51.954633+00:00",
+  "dataset_path": "data/processed/phishing_urls.csv",
+  "total_records": 355370,
+  "train_records": 284296,
+  "test_records": 71074,
+  "benign_with_paths_ratio": 0.3886,
+  "accuracy": 0.9475,
+  "precision": 0.9327,
+  "recall": 0.8779,
+  "f1_score": 0.9045,
+  "false_positive_rate": 0.025,
+  "false_negative_rate": 0.1221,
+  "confusion_matrix": {
+    "tn": 49696,
+    "fp": 1274,
+    "fn": 2455,
+    "tp": 17649
+  },
+  "behavioral_sanity_passed": true,
+  "behavioral_sanity_probes": [
+    {
+      "url": "https://www.example.com",
+      "expected": 0,
+      "prob": 0.0032,
+      "passed": true
+    },
+    {
+      "url": "https://example.com",
+      "expected": 0,
+      "prob": 0.0089,
+      "passed": true
+    },
+    {
+      "url": "https://example.edu",
+      "expected": 0,
+      "prob": 0.0089,
+      "passed": true
+    },
+    {
+      "url": "https://example.org/tools/random-url-generator/",
+      "expected": 0,
+      "prob": 0.0107,
+      "passed": true
+    },
+    {
+      "url": "https://docs.example.edu/3/library/pathlib.html",
+      "expected": 0,
+      "prob": 0.0145,
+      "passed": true
+    },
+    {
+      "url": "http://198.51.100.42/verify",
+      "expected": 1,
+      "prob": 1.0,
+      "passed": true
+    },
+    {
+      "url": "http://paypal-login-secure.example/account/update",
+      "expected": 1,
+      "prob": 1.0,
+      "passed": true
+    }
+  ]
+}

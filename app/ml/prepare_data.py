@@ -65,10 +65,10 @@ def _normalize_label(raw_label: str) -> int | None:
     return None
 
 
-def prepare_from_raw(raw_path: Path, invert_labels: bool = False) -> list[tuple[str, int]]:
+def prepare_from_raw(raw_path: Path, invert_labels: bool = False) -> list[tuple[str, int, str]]:
     """Read and deduplicate a raw CSV with url and label columns."""
     seen: set[str] = set()
-    rows: list[tuple[str, int]] = []
+    rows: list[tuple[str, int, str]] = []
     with raw_path.open(newline="", encoding="utf-8-sig") as handle:
         reader = csv.DictReader(handle)
         field_map = {name.strip().lower(): name for name in (reader.fieldnames or [])}
@@ -84,20 +84,20 @@ def prepare_from_raw(raw_path: Path, invert_labels: bool = False) -> list[tuple[
             if invert_labels:
                 label = 1 - label
             seen.add(url)
-            rows.append((url, label))
+            rows.append((url, label, "original"))
     return rows
 
 
-def generate_reserved_baseline(count_per_class: int = 600, seed: int = 42) -> list[tuple[str, int]]:
+def generate_reserved_baseline(count_per_class: int = 600, seed: int = 42) -> list[tuple[str, int, str]]:
     """Generate a safe synthetic benchmark using RFC 2606/5737 reserved domains and IPs."""
     rng = random.Random(seed)
     seen: set[str] = set()
-    rows: list[tuple[str, int]] = []
+    rows: list[tuple[str, int, str]] = []
 
     def add_unique(url: str, label: int) -> None:
         if url not in seen:
             seen.add(url)
-            rows.append((url, label))
+            rows.append((url, label, "synthetic"))
 
     attempts = 0
     while sum(1 for _, lbl in rows if lbl == 0) < count_per_class and attempts < count_per_class * 10:
@@ -139,10 +139,10 @@ def generate_reserved_baseline(count_per_class: int = 600, seed: int = 42) -> li
 
 
 def augment_benign_url_diversity(
-    rows: list[tuple[str, int]], max_augmented: int = 120_000, seed: int = 42
-) -> list[tuple[str, int]]:
+    rows: list[tuple[str, int, str]], max_augmented: int = 120_000, seed: int = 42
+) -> list[tuple[str, int, str]]:
     """Eliminate homepage-only / www-only benign dataset shortcuts by adding realistic benign paths."""
-    benign_urls = [url for url, label in rows if label == 0]
+    benign_urls = [url for url, label, _ in rows if label == 0]
     if not benign_urls:
         return rows
 
@@ -152,7 +152,7 @@ def augment_benign_url_diversity(
         return rows
 
     rng = random.Random(seed)
-    seen = {url for url, _ in rows}
+    seen = {url for url, _, _ in rows}
     augmented = list(rows)
     target = min(max_augmented, len(benign_urls))
     sampled_bases = rng.sample(benign_urls, k=target) if target < len(benign_urls) else list(benign_urls)
@@ -168,17 +168,17 @@ def augment_benign_url_diversity(
         candidate = f"{cleaned}{path}"
         if candidate not in seen:
             seen.add(candidate)
-            augmented.append((candidate, 0))
+            augmented.append((candidate, 0, "augmented"))
 
     rng.shuffle(augmented)
     return augmented
 
 
-def write_processed_csv(rows: list[tuple[str, int]], output_path: Path) -> None:
+def write_processed_csv(rows: list[tuple[str, int, str]], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["url", "label"])
+        writer.writerow(["url", "label", "source"])
         writer.writerows(rows)
 
 
@@ -202,10 +202,10 @@ def main() -> None:
         source_desc = "synthetic RFC 2606/5737 baseline"
 
     write_processed_csv(rows, args.output)
-    positives = sum(1 for _, label in rows if label == 1)
+    positives = sum(1 for _, label, _ in rows if label == 1)
     negatives = len(rows) - positives
-    benign_paths = sum(1 for u, label in rows if label == 0 and u.count("/") >= 3)
-    benign_no_www = sum(1 for u, label in rows if label == 0 and "://www." not in u.lower())
+    benign_paths = sum(1 for u, label, _ in rows if label == 0 and u.count("/") >= 3)
+    benign_no_www = sum(1 for u, label, _ in rows if label == 0 and "://www." not in u.lower())
     print(
         f"Prepared {len(rows)} rows ({negatives} benign [{benign_paths} with paths, {benign_no_www} without www], "
         f"{positives} phishing) from {source_desc} -> {args.output}"

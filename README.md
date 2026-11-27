@@ -99,4 +99,4 @@ Never commit `.env`, local SQLite databases, raw datasets, or API credentials.
 
 ## Project layout
 
-See `docs/architecture.md` for the system design and `docs/demo-script.md` for a concise judging demo.
+See `docs/architecture.md` for the system design, `docs/demo-script.md` for a concise judging demo, and `docs/pitch-and-qa.md` for pitch and Q&A talking points.

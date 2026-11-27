@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PhishShield</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="popup-shell">
+    <p class="eyebrow">PHISHSHIELD GUARD</p>
+    <h1>Check before you click.</h1>
+    <div class="toggle-row">
+      <label for="guard-toggle">Warn before opening risky links</label>
+      <input id="guard-toggle" type="checkbox" checked />
+    </div>
+    <form id="scan-form">
+      <label for="scan-input">URL or message to check</label>
+      <textarea id="scan-input" placeholder="Paste a link or scam message…"></textarea>
+      <div class="actions" style="margin-top:8px">
+        <select id="language" aria-label="Explanation language" style="flex:1">
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+        </select>
+        <button id="scan-btn" class="btn-primary" type="submit" style="flex:1">Check safely</button>
+      </div>
+    </form>
+    <p id="error" class="error" hidden></p>
+    <section id="result" class="panel" style="margin-top:12px;padding:14px" hidden>
+      <div class="badge-row">
+        <span id="verdict" class="verdict"></span>
+        <span id="scan-ref" class="ref"></span>
+      </div>
+      <div id="campaign-badge" class="campaign" hidden>Repeated campaign pattern</div>
+      <ul id="reasons"></ul>
+      <p id="ml-signal" class="ml-signal" hidden></p>
+      <p id="explanation" class="explanation"></p>
+    </section>
+    <footer>Analyzes text locally—never opens submitted links.</footer>
+    <script src="scanner.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

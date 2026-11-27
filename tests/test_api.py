@@ -30,6 +30,21 @@ def test_health_endpoint(client):
     assert response.json() == {"status": "ok"}
 
 
+def test_cors_allows_chrome_extension_origin(client):
+    test_client, _ = client
+    origin = "chrome-extension://abcdefghijklmnop"
+    res = test_client.options(
+        "/api/scan",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+    assert res.status_code == 200
+    assert res.headers.get("access-control-allow-origin") == origin
+
+
 def test_scan_safe_and_dangerous_urls_with_ml_signal(client):
     test_client, db_path = client
     safe_res = test_client.post("/api/scan", json={"content": "https://www.example.com", "language": "en"})

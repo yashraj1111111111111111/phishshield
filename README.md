@@ -52,6 +52,14 @@ streamlit run streamlit_app.py
 
 To deploy on **Streamlit Community Cloud**, push to GitHub and point the app entrypoint to `streamlit_app.py`. When deployed remotely without a local Ollama server, PhishShield automatically uses its built-in English and Hindi explanations.
 
+### Browser extension (Chrome / Edge)
+
+Load the Manifest V3 extension in `extension/` to warn before opening risky links:
+
+1. Open `chrome://extensions` (or `edge://extensions`) and enable **Developer mode**.
+2. Click **Load unpacked** and select the `extension/` folder.
+3. Click any risky link (or test with a local link to `http://198.51.100.42/verify`) — PhishShield intercepts navigation before opening it and displays `warning.html` enriched with the backend API on `http://127.0.0.1:8001` (with offline rule fallback if the API is stopped).
+
 ## Local Qwen explanation (optional)
 
 PhishShield works without an AI model. To enable explanations through Ollama (`qwen3.5:9b`), make sure Ollama is running and set these variables in `.env` (or export them) before starting the backend:

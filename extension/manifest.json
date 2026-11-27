@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "PhishShield — Check Before You Click",
+  "version": "0.1.0",
+  "description": "Privacy-first phishing link guard that warns before opening risky links without fetching them.",
+  "permissions": ["storage", "tabs", "webNavigation"],
+  "host_permissions": ["http://127.0.0.1:8001/*"],
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PhishShield"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["scanner.js", "content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

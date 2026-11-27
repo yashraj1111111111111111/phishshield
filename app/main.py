@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,6 +41,7 @@ class ScanResponse(BaseModel):
     explanation: str
     ml_probability: float | None = None
     campaign_detected: bool = False
+    technical_details: dict[str, Any] = Field(default_factory=dict)
 
 
 @app.get("/health")
@@ -71,4 +73,5 @@ def create_scan(payload: ScanRequest, request: Request) -> ScanResponse:
         explanation=outcome.explanation,
         ml_probability=outcome.ml_probability,
         campaign_detected=outcome.campaign_detected,
+        technical_details=outcome.technical_details,
     )

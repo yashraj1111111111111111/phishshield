@@ -7,7 +7,8 @@ It **never opens, fetches, renders, or executes** submitted links.
 ## Features
 
 - **Lexical URL & message checks:** Detects non-HTTPS links, raw IPv4/IPv6 hosts, look-alike brand domains, URL shorteners, `%`/`@` obfuscation, urgency, KYC/OTP/PIN/CVV pressure language, and malformed IPv6 brackets.
-- **Explainable risk tiers:** **Low Risk** (`0–24`, displayed as *Low Risk (Unverified)*), **Suspicious** (`25–59`), and **Dangerous** (`60–100`). Unknown URLs are never promised to be "Safe".
+- **Explainable risk tiers:** **Low Risk** (`0–24`, displayed as *Low Risk (Unverified)*), **Suspicious** (`25–59`), and **Dangerous** (`60–100`). Unknown URLs are never promised to be "Safe" or authentic.
+- **Progressive-disclosure `Technical details`:** Keeps plain-language reasons front and center while letting advanced users expand text-extracted facts (parsed host, host type, explicit port or `Not specified`, scheme, HTTPS, TLD, URL length, subdomain count, and every triggered rule ID + score contribution) without any network lookup.
 - **Supporting neural network:** `StandardScaler` + `MLPClassifier` (`app/ml/models/phishing_mlp.joblib`) providing `ml_probability` as supporting evidence only (never lowers a rule-derived risk score).
 - **Plain-language explanations (EN / HI):** Local Ollama (`qwen3.5:9b`) with prompt-injection delimiting, output-length capping, and built-in offline English and Hindi fallbacks.
 - **Abuse & campaign protection:** In-memory per-IP rate limiting (HTTP `429`), salted SHA-256 IP hashes (`IP_HASH_SALT`), and repeated-domain / similar-message campaign detection logged to SQLite.
@@ -82,7 +83,20 @@ For Streamlit Community Cloud, point the app to `streamlit_app.py` on `main`. Th
       "reasons": ["..."],
       "explanation": "...",
       "ml_probability": 1.0,
-      "campaign_detected": false
+      "campaign_detected": false,
+      "technical_details": {
+        "parsed_host": "198.51.100.42",
+        "host_type": "ip_address",
+        "port": "Not specified",
+        "scheme": "http",
+        "https": "no",
+        "top_level_domain": "Not applicable (IP address)",
+        "url_length": 27,
+        "subdomain_count": 0,
+        "detected_url_indicators": ["..."],
+        "detected_message_indicators": [],
+        "triggered_rules": [{"rule_id": "url_raw_ip", "category": "url", "score": 30, "reason": "..."}]
+      }
     }
     ```
   - Errors: `422 Unprocessable Entity` (validation failure), `429 Too Many Requests` (rate limit exceeded).
@@ -131,7 +145,7 @@ With the backend running on port `8001`, you can also run the live end-to-end su
 
 ## Limitations
 
-- **Lexical analysis only:** Clean-looking HTTPS URLs on unknown domains receive `Low Risk (Unverified)` because PhishShield does not fetch pages, check WHOIS/domain age, or query external threat-intel feeds.
+- **Lexical analysis only (cannot prove authenticity):** PhishShield cannot prove a website is authentic from URL or message text alone. A `Low Risk (Unverified)` or `0/100` result only means no common phishing indicators were detected by this text-only scan—new or convincing scams may not show visible warning signs, because PhishShield intentionally never fetches pages, checks WHOIS/domain age, or queries external threat-intel feeds. Always verify important requests through the organisation's official app, bookmarked website, or a known contact method.
 - **Dataset augmentation:** Raw UCI PhiUSIIL benign samples were homepage-only (`www.` + `0` paths), so `app/ml/prepare_data.py` augments benign path and non-`www.` diversity; real-world prevalence differs.
 - **Per-process rate limiting & ephemeral cloud DB:** FastAPI rate limiting is in-memory per process (`TRUST_PROXY_HEADERS=false` by default). On Streamlit Community Cloud, rate limiting is per-session and `database/phishshield.db` is ephemeral across container restarts.
 - **Indicator language:** When `language=hi` is selected, `explanation` is localized to Hindi while `reasons` strings remain in English.

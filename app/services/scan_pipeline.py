@@ -1,7 +1,8 @@
 """Shared scan execution pipeline used by both the FastAPI API and Streamlit UI."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 from app.database.repository import save_scan
 from app.detectors.scanner import scan
@@ -21,6 +22,7 @@ class ScanOutcome:
     explanation: str
     ml_probability: float | None
     campaign_detected: bool
+    technical_details: dict[str, Any] = field(default_factory=dict)
 
 
 def run_scan_pipeline(content: str, language: str, client_ip: str) -> ScanOutcome:
@@ -31,6 +33,15 @@ def run_scan_pipeline(content: str, language: str, client_ip: str) -> ScanOutcom
     campaign_reasons = detect_campaign(content, result.content_type, result.score, client_ip)
     reasons = [*result.reasons, *campaign_reasons]
     campaign_detected = bool(campaign_reasons)
+    technical_details = dict(result.technical_details)
+    if campaign_reasons:
+        technical_details["triggered_rules"] = [
+            *technical_details.get("triggered_rules", []),
+            *(
+                {"rule_id": "campaign_pattern", "category": "campaign", "score": 0, "reason": reason}
+                for reason in campaign_reasons
+            ),
+        ]
     reference = save_scan(
         content,
         result.content_type,
@@ -50,4 +61,5 @@ def run_scan_pipeline(content: str, language: str, client_ip: str) -> ScanOutcom
         explanation=explanation,
         ml_probability=ml_probability,
         campaign_detected=campaign_detected,
+        technical_details=technical_details,
     )

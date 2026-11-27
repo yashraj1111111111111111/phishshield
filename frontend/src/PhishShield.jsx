@@ -14,42 +14,88 @@ const DEMOS = [
 const MOCKS_BY_LANG = {
   en: {
     low: {
-      scan_reference: "261127000101", risk_score: 12, risk_level: "Low Risk", content_type: "url",
-      reasons: ["No obvious urgency or credential request detected.", "The domain uses a familiar example-domain pattern."],
-      explanation: "We did not find strong warning signs in this text. That does not prove the destination is safe—this link is still unverified. Only visit it if you expected it and trust the sender.",
+      scan_reference: "261127000101", risk_score: 0, risk_level: "Low Risk", content_type: "url",
+      reasons: ["No common phishing indicators were found in the text, though the destination itself is unverified and not guaranteed to be safe."],
+      explanation: "Low Risk (Unverified) means no strong warning signs were found. It does not prove that this website or message is genuine. New or highly convincing scams may not show visible warning signs—verify important requests through the organisation’s official app, bookmarked website, or a known contact method.",
       ml_probability: 0.08, campaign_detected: false,
+      technical_details: {
+        parsed_host: "www.example.com", host_type: "domain", port: "Not specified",
+        scheme: "https", https: "yes", top_level_domain: ".com", url_length: 23, subdomain_count: 1,
+        detected_url_indicators: [], detected_message_indicators: [], triggered_rules: [],
+      },
     },
     suspicious: {
       scan_reference: "261127000102", risk_score: 46, risk_level: "Suspicious", content_type: "url",
       reasons: ["The domain contains a brand-like name with an unusual extra word.", "The URL includes a sign-in path that may be used to collect credentials."],
       explanation: "This link has a few warning signs. The address resembles a familiar service, but the domain is not that service's official domain. Do not enter a password or payment details.",
       ml_probability: 0.71, campaign_detected: false,
+      technical_details: {
+        parsed_host: "paypal-verify.example", host_type: "domain", port: "Not specified",
+        scheme: "https", https: "yes", top_level_domain: ".example", url_length: 43, subdomain_count: 0,
+        detected_url_indicators: ["Contains a well-known brand or service name ('paypal') inside an unofficial web address."],
+        detected_message_indicators: [],
+        triggered_rules: [{ rule_id: "url_brand_impersonation", category: "url", score: 30, reason: "Contains a well-known brand or service name ('paypal') inside an unofficial web address." }],
+      },
     },
     dangerous: {
       scan_reference: "261127000103", risk_score: 94, risk_level: "Dangerous", content_type: "message",
       reasons: ["Creates urgency with a KYC-expiry threat.", "Requests an OTP, which should never be shared with another person.", "Uses a raw IP address instead of a recognizable organization domain."],
       explanation: "This message is very likely to be a scam. It pressures you to act quickly and asks for your OTP. Do not reply, share a code, or use the link. Contact the organization using its official app or a number you already trust.",
       ml_probability: 0.98, campaign_detected: true,
+      technical_details: {
+        parsed_host: "198.51.100.42", host_type: "ip_address", port: "Not specified",
+        scheme: "http", https: "no", top_level_domain: "Not applicable (IP address)", url_length: 30, subdomain_count: 0,
+        detected_url_indicators: ["The link does not use HTTPS.", "The link uses a raw IP address instead of a normal website name."],
+        detected_message_indicators: ["The message asks for sensitive authentication or payment information."],
+        triggered_rules: [
+          { rule_id: "msg_sensitive_info", category: "message", score: 30, reason: "The message asks for sensitive authentication or payment information." },
+          { rule_id: "url_raw_ip", category: "url", score: 30, reason: "The link uses a raw IP address instead of a normal website name." },
+          { rule_id: "url_no_https", category: "url", score: 15, reason: "The link does not use HTTPS." },
+        ],
+      },
     },
   },
   hi: {
     low: {
-      scan_reference: "261127000101", risk_score: 12, risk_level: "Low Risk", content_type: "url",
-      reasons: ["टेक्स्ट में कोई स्पष्ट जल्दबाज़ी या OTP/पासवर्ड की माँग नहीं मिली।", "डोमेन एक सामान्य उदाहरण-डोमेन पैटर्न का उपयोग करता है।"],
-      explanation: "इस टेक्स्ट में बड़े खतरे के संकेत नहीं मिले हैं। फिर भी यह साबित नहीं होता कि वेबसाइट सुरक्षित है—यह लिंक अभी भी असत्यापित है। केवल तभी खोलें जब आपको इसकी उम्मीद हो और भेजने वाले पर भरोसा हो।",
+      scan_reference: "261127000101", risk_score: 0, risk_level: "Low Risk", content_type: "url",
+      reasons: ["टेक्स्ट में कोई सामान्य फ़िशिंग संकेत नहीं मिला, लेकिन यह लिंक असत्यापित है और सुरक्षित होने की गारंटी नहीं है।"],
+      explanation: "कम जोखिम (असत्यापित) का मतलब केवल यह है कि इस टेक्स्ट-आधारित जाँच में कोई बड़ा चेतावनी संकेत नहीं मिला। यह साबित नहीं करता कि वेबसाइट या संदेश असली है—महत्वपूर्ण मामलों की पुष्टि आधिकारिक ऐप या बुकमार्क की गई वेबसाइट से ही करें।",
       ml_probability: 0.08, campaign_detected: false,
+      technical_details: {
+        parsed_host: "www.example.com", host_type: "domain", port: "Not specified",
+        scheme: "https", https: "yes", top_level_domain: ".com", url_length: 23, subdomain_count: 1,
+        detected_url_indicators: [], detected_message_indicators: [], triggered_rules: [],
+      },
     },
     suspicious: {
       scan_reference: "261127000102", risk_score: 46, risk_level: "Suspicious", content_type: "url",
       reasons: ["डोमेन में किसी जाने-पहचाने ब्रांड जैसा नाम और एक असामान्य अतिरिक्त शब्द है।", "URL में साइन-इन पेज जैसा रास्ता है जिसका उपयोग लॉगिन जानकारी चुराने के लिए हो सकता है।"],
       explanation: "इस लिंक में कुछ चेतावनी के संकेत हैं। पता किसी जानी-मानी सेवा जैसा दिखता है, लेकिन यह उसका आधिकारिक डोमेन नहीं है। पासवर्ड या भुगतान जानकारी दर्ज न करें।",
       ml_probability: 0.71, campaign_detected: false,
+      technical_details: {
+        parsed_host: "paypal-verify.example", host_type: "domain", port: "Not specified",
+        scheme: "https", https: "yes", top_level_domain: ".example", url_length: 43, subdomain_count: 0,
+        detected_url_indicators: ["अनधिकृत वेब पते में एक प्रसिद्ध ब्रांड ('paypal') का नाम शामिल है।"],
+        detected_message_indicators: [],
+        triggered_rules: [{ rule_id: "url_brand_impersonation", category: "url", score: 30, reason: "Unrecognized domain containing brand 'paypal'." }],
+      },
     },
     dangerous: {
       scan_reference: "261127000103", risk_score: 94, risk_level: "Dangerous", content_type: "message",
       reasons: ["KYC बंद होने की धमकी देकर जल्दबाज़ी का दबाव बनाता है।", "OTP माँगता है, जिसे कभी किसी के साथ साझा नहीं करना चाहिए।", "आधिकारिक वेबसाइट के बजाय सीधे IP नंबर का उपयोग करता है।"],
       explanation: "यह संदेश धोखाधड़ी (स्कैम) होने की पूरी संभावना है। यह तुरंत कार्रवाई करने का दबाव डालता है और OTP माँगता है। जवाब न दें, कोड साझा न करें और लिंक न खोलें। सीधे आधिकारिक ऐप या भरोसेमंद नंबर से संपर्क करें।",
       ml_probability: 0.98, campaign_detected: true,
+      technical_details: {
+        parsed_host: "198.51.100.42", host_type: "ip_address", port: "Not specified",
+        scheme: "http", https: "no", top_level_domain: "Not applicable (IP address)", url_length: 30, subdomain_count: 0,
+        detected_url_indicators: ["लिंक HTTPS का उपयोग नहीं करता।", "सीधे IP पते का उपयोग करता है।"],
+        detected_message_indicators: ["OTP या संवेदनशील जानकारी माँगता है।"],
+        triggered_rules: [
+          { rule_id: "msg_sensitive_info", category: "message", score: 30, reason: "Sensitive authentication info requested." },
+          { rule_id: "url_raw_ip", category: "url", score: 30, reason: "Raw IP address in URL." },
+          { rule_id: "url_no_https", category: "url", score: 15, reason: "Non-HTTPS scheme." },
+        ],
+      },
     },
   },
 };
@@ -103,7 +149,7 @@ const COPY = {
     faqTitle: "A few things you might be wondering.",
     faqs: [
       { q: "Does PhishShield open the link?", a: "No. Submitted URLs are treated as text only. The checker looks at the text and never visits the destination." },
-      { q: "Does 'Low Risk' mean safe?", a: "No. It means no strong warning signs were identified. Unknown links remain unverified, so use your judgement." },
+      { q: "Does 'Low Risk' or 0/100 prove a site is authentic?", a: "No. PhishShield cannot prove authenticity from text alone. Low Risk (Unverified) or 0/100 only means no common phishing indicators were detected—verify important requests through the organisation's official app or bookmarked website." },
       { q: "Can it check messages as well as URLs?", a: "Yes. You can paste SMS, WhatsApp alerts, Digital Arrest/CBI threats, UPI/QR refund messages, e-challan .apk links, KYC notices, and job offers." },
       { q: "Who is PhishShield for?", a: "It is designed to make scam-warning signals easier to understand for students, parents, and families." },
     ],
@@ -137,7 +183,10 @@ const COPY = {
     typeMsg: "MESSAGE",
     tierLabels: { low: "Low Risk (Unverified)", suspicious: "Suspicious", dangerous: "Dangerous" },
     verdictHeadlines: { low: "No strong red flags found.", suspicious: "Take a closer look.", dangerous: "Do not engage with this." },
-    verdictSubs: { low: "Still unverified. Stay alert.", suspicious: "Some details deserve caution.", dangerous: "This has multiple high-risk signals." },
+    verdictSubs: { low: "Low Risk (Unverified) does not prove authenticity or safety.", suspicious: "Some details deserve caution.", dangerous: "This has multiple high-risk signals." },
+    unverifiedNote: "0/100 means no common phishing indicators were detected by this text-only scan. New or highly convincing scams may not show visible warning signs. Verify important requests through the organisation’s official app, bookmarked website, or a known contact method.",
+    techDetailsTitle: "Technical details",
+    techDetailsSub: "Extracted strictly from the pasted text — zero network or DNS lookups.",
     plainLangLabel: "IN PLAIN LANGUAGE",
     campaignBadge: "Repeated scam/campaign pattern detected",
     noticedHeading: "What we noticed",
@@ -214,7 +263,7 @@ const COPY = {
     faqTitle: "कुछ बातें जो आप जानना चाहेंगे।",
     faqs: [
       { q: "क्या PhishShield लिंक को खोलता है?", a: "नहीं। डाले गए URL को केवल टेक्स्ट के रूप में देखा जाता है; जाँच के दौरान वेबसाइट कभी नहीं खोली जाती।" },
-      { q: "क्या 'कम जोखिम' का मतलब सुरक्षित है?", a: "नहीं। इसका मतलब केवल इतना है कि टेक्स्ट में आम ठगी के संकेत नहीं मिले। अनजान लिंक फिर भी असत्यापित रहते हैं।" },
+      { q: "क्या 'कम जोखिम' या 0/100 का मतलब असली या सुरक्षित है?", a: "नहीं। PhishShield केवल टेक्स्ट से किसी वेबसाइट के असली होने की पुष्टि नहीं कर सकता। इसका मतलब केवल इतना है कि कोई आम ठगी का संकेत नहीं मिला—आधिकारिक ऐप या बुकमार्क की गई वेबसाइट से ही पुष्टि करें।" },
       { q: "क्या यह URL के अलावा पूरे संदेश भी जाँच सकता है?", a: "हाँ। आप SMS, WhatsApp संदेश, डिजिटल अरेस्ट/CBI धमकी, UPI/QR रिफंड, ई-चालान .apk लिंक, KYC नोटिस या नौकरी के ऑफर पेस्ट कर सकते हैं।" },
       { q: "PhishShield किसके लिए बनाया गया है?", a: "यह छात्रों, माता-पिता और परिवारों के लिए बनाया गया है ताकि ठगी के संकेत आसानी से समझ आ सकें।" },
     ],
@@ -248,7 +297,10 @@ const COPY = {
     typeMsg: "संदेश",
     tierLabels: { low: "कम जोखिम (असत्यापित)", suspicious: "संदिग्ध (Suspicious)", dangerous: "खतरनाक (Dangerous)" },
     verdictHeadlines: { low: "कोई बड़ा ख़तरा नहीं मिला।", suspicious: "थोड़ी सावधानी ज़रूरी है।", dangerous: "इस संदेश पर भरोसा न करें।" },
-    verdictSubs: { low: "यह लिंक अभी भी असत्यापित है, सतर्क रहें।", suspicious: "कुछ संकेत संदिग्ध हैं—आधिकारिक स्रोत से जांचें।", dangerous: "इसमें कई गंभीर ठगी के संकेत मिले हैं।" },
+    verdictSubs: { low: "कम जोखिम (असत्यापित) होने का मतलब असली या सुरक्षित होना नहीं है।", suspicious: "कुछ संकेत संदिग्ध हैं—आधिकारिक स्रोत से जांचें।", dangerous: "इसमें कई गंभीर ठगी के संकेत मिले हैं।" },
+    unverifiedNote: "0/100 का मतलब है कि इस टेक्स्ट-आधारित जाँच में कोई सामान्य फ़िशिंग संकेत नहीं मिला। नए या बेहद चालाक स्कैम में दिखने वाले संकेत न भी हों। महत्वपूर्ण अनुरोधों की पुष्टि आधिकारिक ऐप, बुकमार्क की गई वेबसाइट या ज्ञात नंबर से करें।",
+    techDetailsTitle: "Technical details",
+    techDetailsSub: "केवल पेस्ट किए गए टेक्स्ट से निकाले गए तथ्य — कोई नेटवर्क या DNS जाँच नहीं।",
     plainLangLabel: "सरल भाषा में",
     campaignBadge: "बार-बार दोहराया जाने वाला स्कैम पैटर्न मिला",
     noticedHeading: "हमने क्या देखा",
@@ -825,6 +877,14 @@ export default function PhishShield() {
                 }
               </div>
 
+              {/* Low-risk unverified notice */}
+              {tier.key === "low" && (
+                <div className="unverified-callout">
+                  <Icon name="alert" size={15}/>
+                  <p>{t.unverifiedNote}</p>
+                </div>
+              )}
+
               {/* ML confidence */}
               {activeResult.ml_probability !== null && activeResult.ml_probability !== undefined && (
                 <div className="ml-signal">
@@ -837,6 +897,55 @@ export default function PhishShield() {
                   </div>
                   <small>{t.mlSignalNote}</small>
                 </div>
+              )}
+
+              {/* Technical details (progressive disclosure) */}
+              {activeResult.technical_details && (
+                <details className="tech-details">
+                  <summary>
+                    <span>{t.techDetailsTitle}</span>
+                    <small>{activeResult.technical_details.triggered_rules?.length ?? 0} rules</small>
+                  </summary>
+                  <div className="tech-details-body">
+                    <p className="tech-details-note">{t.techDetailsSub}</p>
+                    <dl className="tech-kv-grid">
+                      <div><dt>Parsed host</dt><dd>{activeResult.technical_details.parsed_host || "Not specified"}</dd></div>
+                      <div><dt>Host type</dt><dd>{activeResult.technical_details.host_type === "ip_address" ? "IP address" : activeResult.technical_details.host_type || "Not specified"}</dd></div>
+                      <div><dt>Port</dt><dd>{activeResult.technical_details.port ?? "Not specified"}</dd></div>
+                      <div><dt>Scheme</dt><dd>{activeResult.technical_details.scheme || "not specified"}</dd></div>
+                      <div><dt>HTTPS</dt><dd>{activeResult.technical_details.https || "not specified"}</dd></div>
+                      <div><dt>Top-level domain</dt><dd>{activeResult.technical_details.top_level_domain || "Not applicable"}</dd></div>
+                      <div><dt>URL length</dt><dd>{activeResult.technical_details.url_length ?? "Not applicable"}</dd></div>
+                      <div><dt>Number of subdomains</dt><dd>{activeResult.technical_details.subdomain_count ?? "Not applicable"}</dd></div>
+                    </dl>
+                    <div className="tech-lists">
+                      <div>
+                        <h5>Detected URL indicators</h5>
+                        {activeResult.technical_details.detected_url_indicators?.length ? (
+                          <ul>{activeResult.technical_details.detected_url_indicators.map((item, i) => <li key={i}>{item}</li>)}</ul>
+                        ) : <p className="tech-empty">None</p>}
+                      </div>
+                      <div>
+                        <h5>Detected message indicators</h5>
+                        {activeResult.technical_details.detected_message_indicators?.length ? (
+                          <ul>{activeResult.technical_details.detected_message_indicators.map((item, i) => <li key={i}>{item}</li>)}</ul>
+                        ) : <p className="tech-empty">None</p>}
+                      </div>
+                      <div>
+                        <h5>Triggered rules &amp; score contributions</h5>
+                        {activeResult.technical_details.triggered_rules?.length ? (
+                          <ul className="tech-rules-list">
+                            {activeResult.technical_details.triggered_rules.map((rule, i) => (
+                              <li key={`${rule.rule_id}-${i}`}>
+                                <code>{rule.rule_id}</code> <b>+{rule.score}</b> — {rule.reason}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : <p className="tech-empty">No risk rules triggered (0 points).</p>}
+                      </div>
+                    </div>
+                  </div>
+                </details>
               )}
 
               {/* Scan reference */}

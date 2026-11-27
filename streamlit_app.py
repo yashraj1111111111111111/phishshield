@@ -518,10 +518,26 @@ SAMPLE_OUTCOMES = {
         risk_score=0,
         risk_level="Low Risk",
         content_type="url",
-        reasons=["No common phishing indicators were found in the text, though the destination itself is unverified."],
-        explanation="We did not find strong warning signs in this text. That does not prove the destination is safe—this link is still unverified.",
+        reasons=["No common phishing indicators were found in the text, though the destination itself is unverified and not guaranteed to be safe."],
+        explanation=(
+            "Low Risk (Unverified) means no strong warning signs were found by this text-only scan. "
+            "It does not prove that this website or message is genuine or safe—verify important requests through the organisation's official app, bookmarked website, or a known contact method."
+        ),
         ml_probability=0.0054,
         campaign_detected=False,
+        technical_details={
+            "parsed_host": "www.example.com",
+            "host_type": "domain",
+            "port": "Not specified",
+            "scheme": "https",
+            "https": "yes",
+            "top_level_domain": ".com",
+            "url_length": 23,
+            "subdomain_count": 1,
+            "detected_url_indicators": [],
+            "detected_message_indicators": [],
+            "triggered_rules": [],
+        },
     ),
     "Suspicious": ScanOutcome(
         scan_reference="261127000102",
@@ -535,6 +551,25 @@ SAMPLE_OUTCOMES = {
         explanation="This link has warning signs. Shortened non-HTTPS links can hide where they actually lead—verify before trusting.",
         ml_probability=0.71,
         campaign_detected=False,
+        technical_details={
+            "parsed_host": "bit.ly",
+            "host_type": "domain",
+            "port": "Not specified",
+            "scheme": "http",
+            "https": "no",
+            "top_level_domain": ".ly",
+            "url_length": 29,
+            "subdomain_count": 0,
+            "detected_url_indicators": [
+                "The link does not use HTTPS, so its connection may not be protected.",
+                "This is a shortened link, which can hide its real destination.",
+            ],
+            "detected_message_indicators": [],
+            "triggered_rules": [
+                {"rule_id": "url_no_https", "category": "url", "score": 15, "reason": "The link does not use HTTPS, so its connection may not be protected."},
+                {"rule_id": "url_shortener", "category": "url", "score": 20, "reason": "This is a shortened link, which can hide its real destination."},
+            ],
+        },
     ),
     "Dangerous": ScanOutcome(
         scan_reference="261127000103",
@@ -549,6 +584,26 @@ SAMPLE_OUTCOMES = {
         explanation="This message shows strong scam indicators: urgency, OTP request, and a raw IP link. Do not click the link or share your OTP.",
         ml_probability=0.98,
         campaign_detected=True,
+        technical_details={
+            "parsed_host": "198.51.100.42",
+            "host_type": "ip_address",
+            "port": "Not specified",
+            "scheme": "http",
+            "https": "no",
+            "top_level_domain": "Not applicable (IP address)",
+            "url_length": 27,
+            "subdomain_count": 0,
+            "detected_url_indicators": ["The link uses a raw IP address instead of a normal website name."],
+            "detected_message_indicators": [
+                "The message uses scam-associated language: kyc, otp, urgent, verify.",
+                "The message asks for sensitive authentication or payment information.",
+            ],
+            "triggered_rules": [
+                {"rule_id": "msg_scam_keywords", "category": "message", "score": 24, "reason": "The message uses scam-associated language: kyc, otp, urgent, verify."},
+                {"rule_id": "msg_sensitive_info", "category": "message", "score": 30, "reason": "The message asks for sensitive authentication or payment information."},
+                {"rule_id": "url_raw_ip", "category": "url", "score": 30, "reason": "The link uses a raw IP address instead of a normal website name."},
+            ],
+        },
     ),
 }
 
@@ -746,6 +801,10 @@ with col_result:
             st.warning(f"Verdict: **{display_outcome.risk_level}** ({display_outcome.risk_score}/100)")
         else:
             st.success(f"Verdict: **Low Risk (Unverified)** ({display_outcome.risk_score}/100)")
+            st.caption(
+                "0/100 means no common phishing indicators were detected by this text-only scan. "
+                "It does not prove that this website or message is genuine—verify important requests through the organisation's official app, bookmarked website, or a known contact method."
+            )
 
         if display_outcome.campaign_detected:
             st.warning(t["campaign_warn"])
@@ -759,6 +818,32 @@ with col_result:
         if display_outcome.ml_probability is not None:
             st.progress(max(0.0, min(1.0, float(display_outcome.ml_probability))))
             st.caption(t["ml_caption"].format(pct=display_outcome.ml_probability * 100))
+
+        td = getattr(display_outcome, "technical_details", None) or {}
+        if td:
+            with st.expander("Technical details"):
+                st.caption("Extracted strictly from submitted text — no URLs visited or DNS lookups performed.")
+                st.markdown(
+                    f"- **Parsed host:** `{td.get('parsed_host', 'Not specified')}`\n"
+                    f"- **Host type:** `{td.get('host_type', 'not_specified')}`\n"
+                    f"- **Port:** `{td.get('port', 'Not specified')}`\n"
+                    f"- **Scheme:** `{td.get('scheme', 'not specified')}`\n"
+                    f"- **HTTPS:** `{td.get('https', 'not specified')}`\n"
+                    f"- **Top-level domain:** `{td.get('top_level_domain', 'Not applicable')}`\n"
+                    f"- **URL length:** `{td.get('url_length') if td.get('url_length') is not None else 'Not applicable'}`\n"
+                    f"- **Number of subdomains:** `{td.get('subdomain_count') if td.get('subdomain_count') is not None else 'Not applicable'}`"
+                )
+                url_inds = td.get("detected_url_indicators") or []
+                msg_inds = td.get("detected_message_indicators") or []
+                rules = td.get("triggered_rules") or []
+                st.markdown("**Detected URL indicators:** " + (", ".join(url_inds) if url_inds else "None"))
+                st.markdown("**Detected message indicators:** " + (", ".join(msg_inds) if msg_inds else "None"))
+                if rules:
+                    st.markdown("**Triggered rule IDs & score contributions:**")
+                    for r in rules:
+                        st.markdown(f"- `{r.get('rule_id')}` (`+{r.get('score')}`): {r.get('reason')}")
+                else:
+                    st.markdown("**Triggered rule IDs & score contributions:** None (0 points)")
 
     if st.session_state.scan_history:
         with st.expander(t["recent_title"]):

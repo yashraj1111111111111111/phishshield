@@ -83,3 +83,61 @@ def test_word_boundaries_prevent_acronym_false_positives():
     benign = scan("Our portrait photography training workshop starts at 10am.")
     assert benign.level == "Low Risk"
     assert benign.score == 0
+
+
+def test_low_risk_wording_makes_no_safe_or_authentic_claim():
+    result = scan("https://www.example.com")
+    assert result.score == 0
+    assert result.level == "Low Risk"
+    joined = " ".join(result.reasons).lower()
+    assert "unverified" in joined
+    assert "not guaranteed to be safe" in joined
+    assert "authentic" not in joined
+
+
+def test_url_with_explicit_port_technical_details():
+    result = scan("http://198.51.100.42:8080/login")
+    td = result.technical_details
+    assert td["parsed_host"] == "198.51.100.42"
+    assert td["host_type"] == "ip_address"
+    assert td["port"] == 8080
+    assert td["scheme"] == "http"
+    assert td["https"] == "no"
+    rule_ids = {r["rule_id"] for r in td["triggered_rules"]}
+    assert {"url_raw_ip", "url_no_https", "url_explicit_port"}.issubset(rule_ids)
+
+
+def test_url_without_explicit_port_reports_not_specified():
+    result = scan("https://www.example.com/path")
+    td = result.technical_details
+    assert td["port"] == "Not specified"
+    assert td["scheme"] == "https"
+    assert td["https"] == "yes"
+
+
+def test_domain_url_technical_details():
+    result = scan("https://login.verify.paypal-secure.example/auth")
+    td = result.technical_details
+    assert td["parsed_host"] == "login.verify.paypal-secure.example"
+    assert td["host_type"] == "domain"
+    assert td["top_level_domain"] == ".example"
+    assert td["subdomain_count"] == 2
+    assert td["url_length"] == len("https://login.verify.paypal-secure.example/auth")
+    assert len(td["detected_url_indicators"]) > 0
+
+
+def test_message_with_multiple_scam_categories_technical_details():
+    msg = (
+        "CBI Cyber Crime digital arrest notice: download challan.apk and install AnyDesk "
+        "or enter UPI PIN immediately at http://198.51.100.42:8080/pay"
+    )
+    result = scan(msg)
+    td = result.technical_details
+    assert result.content_type == "message"
+    assert result.level == "Dangerous"
+    assert td["parsed_host"] == "198.51.100.42"
+    assert td["port"] == 8080
+    assert len(td["detected_message_indicators"]) >= 4
+    assert len(td["detected_url_indicators"]) >= 3
+    rule_ids = {r["rule_id"] for r in td["triggered_rules"]}
+    assert {"msg_digital_arrest", "msg_apk_challan", "msg_remote_access", "msg_upi_qr", "combo_threat_plus_action"}.issubset(rule_ids)

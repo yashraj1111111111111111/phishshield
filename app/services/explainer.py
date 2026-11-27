@@ -75,13 +75,20 @@ def _fallback_explanation(level: str, reasons: list[str], language: str) -> str:
         advice = (
             "इस लिंक पर क्लिक न करें और न ही OTP, PIN या पासवर्ड साझा करें।"
             if level != "Low Risk"
-            else "टेक्स्ट में कोई सामान्य फ़िशिंग संकेत नहीं मिला, लेकिन यह लिंक सत्यापित नहीं है—भरोसा करने से पहले वेबसाइट की जांच जरूर करें।"
+            else (
+                "कम जोखिम (असत्यापित) का मतलब केवल यह है कि इस टेक्स्ट-आधारित जाँच में कोई बड़ा चेतावनी संकेत नहीं मिला। "
+                "यह साबित नहीं करता कि वेबसाइट या संदेश असली या सुरक्षित है। महत्वपूर्ण मामलों की पुष्टि आधिकारिक ऐप या बुकमार्क की गई वेबसाइट से ही करें।"
+            )
         )
         hindi_reasons = " ".join(_translate_reasons_to_hindi(reasons))
         return f"यह सामग्री {hindi_level} श्रेणी में है। {advice} कारण: {hindi_reasons}"
     joined_reasons = " ".join(reasons)
     if level == "Low Risk":
-        return f"This content is rated Low Risk (Unverified). {joined_reasons}"
+        return (
+            "Low Risk (Unverified) means no strong warning signs were found by this text-only scan. "
+            "It does not prove that this website or message is genuine or safe—new or highly convincing scams may not show visible warning signs. "
+            f"Verify important requests through the organisation's official app, bookmarked website, or a known contact method. {joined_reasons}"
+        )
     return f"This content is rated {level}. {joined_reasons}"
 
 

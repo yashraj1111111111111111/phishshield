@@ -1,14 +1,22 @@
-import pytest
+import joblib
 
 from app import config
 from app.database.connection import initialize_database
 from app.detectors.scanner import scan
+from app.ml.features import url_features
 from app.ml.predictor import MODEL_PATH, predict_url_probability
 from app.services.abuse_protection import reset_rate_limits
 from app.services.scan_pipeline import run_scan_pipeline
 
 
-@pytest.mark.skipif(not MODEL_PATH.exists(), reason="Trained MLP artifact not present")
+def test_committed_model_exists_and_loads_cleanly():
+    assert MODEL_PATH.exists(), f"Committed model artifact missing at {MODEL_PATH}"
+    loaded = joblib.load(MODEL_PATH)
+    proba = float(loaded.predict_proba([url_features("https://www.example.com")])[0][1])
+    assert 0.0 <= proba <= 1.0
+    assert predict_url_probability("https://www.example.com", "url") is not None
+
+
 def test_mlp_does_not_misclassify_benign_deep_path_urls():
     benign_urls = [
         "https://www.example.com",
@@ -24,7 +32,6 @@ def test_mlp_does_not_misclassify_benign_deep_path_urls():
         assert prob < 0.35, f"Expected low phishing probability for benign URL {url}, got {prob}"
 
 
-@pytest.mark.skipif(not MODEL_PATH.exists(), reason="Trained MLP artifact not present")
 def test_mlp_flags_clear_phishing_patterns():
     phishing_urls = [
         "http://198.51.100.42/verify",

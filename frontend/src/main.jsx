@@ -41,8 +41,8 @@ function App() {
         </div>
       </form>
       {error && <p className="error" role="alert">{error}</p>}
-      {result && <article className={`result ${result.risk_level.toLowerCase()}`}>
-        <div className="score"><span>{result.risk_level}</span><strong>{result.risk_score}<small>/100</small></strong></div>
+      {result && <article className={`result ${result.risk_level.toLowerCase().replace(/\s+/g, "-")}`}>
+        <div className="score"><span>{result.risk_level === "Low Risk" ? "Low Risk (Unverified)" : result.risk_level}</span><strong>{result.risk_score}<small>/100</small></strong></div>
         <div className="details">
           <p className="reference">SCAN REF: {result.scan_reference}</p>
           {result.campaign_detected && <p className="campaign-tag">Repeated scam/campaign pattern detected</p>}

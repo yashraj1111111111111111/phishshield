@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { extractErrorMessage, submitScan } from "../src/api.js";
 
 test("submitScan returns parsed scan result on 200 OK", async () => {
-  const payload = { scan_reference: "261127000001", risk_score: 0, risk_level: "Safe" };
+  const payload = { scan_reference: "261127000001", risk_score: 0, risk_level: "Low Risk" };
   const result = await submitScan({
     content: "https://www.example.com",
     language: "en",

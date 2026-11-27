@@ -81,6 +81,8 @@ def scan(content: str) -> ScanResult:
     elif score >= 25:
         level = "Suspicious"
     else:
-        level = "Safe"
-    reasons = [reason for _, reason in findings] or ["No common phishing indicators were found. This is not a guarantee that the content is safe."]
+        level = "Low Risk"
+    reasons = [reason for _, reason in findings] or [
+        "No common phishing indicators were found in the text, though the destination itself is unverified and not guaranteed to be safe."
+    ]
     return ScanResult(score=score, level=level, reasons=reasons, content_type="url" if looks_like_url else "message")

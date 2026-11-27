@@ -9,7 +9,7 @@ def test_raw_ip_http_link_is_dangerous():
 
 def test_benign_reserved_domain_has_low_risk():
     result = scan("https://www.example.com")
-    assert result.level == "Safe"
+    assert result.level == "Low Risk"
 
 
 def test_otp_message_is_flagged():

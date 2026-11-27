@@ -35,9 +35,10 @@
 
   function renderResult(data) {
     resultEl.hidden = false;
-    const level = data.risk_level || "Safe";
-    verdictEl.textContent = `${level} (${data.risk_score ?? 0}/100)`;
-    verdictEl.className = `verdict ${level.toLowerCase()}`;
+    const level = data.risk_level || "Low Risk";
+    const displayLevel = level === "Low Risk" ? "Low Risk (Unverified)" : level;
+    verdictEl.textContent = `${displayLevel} (${data.risk_score ?? 0}/100)`;
+    verdictEl.className = `verdict ${level.toLowerCase().replace(/\s+/g, "-")}`;
     refEl.textContent = data.scan_reference || "LOCAL";
     campaignEl.hidden = !data.campaign_detected;
 

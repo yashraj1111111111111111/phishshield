@@ -67,7 +67,7 @@ if submitted:
             elif outcome.risk_level == "Suspicious":
                 badge_col.warning(f"Verdict: **{outcome.risk_level}**")
             else:
-                badge_col.success(f"Verdict: **{outcome.risk_level}**")
+                badge_col.success("Verdict: **Low Risk (Unverified)**")
 
             if outcome.campaign_detected:
                 st.warning("Repeated scam/campaign pattern detected across recent scans.")

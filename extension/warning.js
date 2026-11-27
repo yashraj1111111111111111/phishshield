@@ -18,8 +18,9 @@
 
   function renderResult(data) {
     const level = data.risk_level || "Suspicious";
-    verdictEl.textContent = `${level} (${data.risk_score ?? 0}/100)`;
-    verdictEl.className = `verdict ${level.toLowerCase()}`;
+    const displayLevel = level === "Low Risk" ? "Low Risk (Unverified)" : level;
+    verdictEl.textContent = `${displayLevel} (${data.risk_score ?? 0}/100)`;
+    verdictEl.className = `verdict ${level.toLowerCase().replace(/\s+/g, "-")}`;
     refEl.textContent = data.scan_reference ? `SCAN REF: ${data.scan_reference}` : "LOCAL CHECK";
     campaignEl.hidden = !data.campaign_detected;
 

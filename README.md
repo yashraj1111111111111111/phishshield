@@ -7,7 +7,7 @@ It never opens, visits, or executes submitted links.
 ## Features
 
 - URL and message risk checks: HTTPS, raw IP links, look-alike domains, URL shorteners, encoded URLs, urgency, KYC, OTP, prize and payment language.
-- Explainable score: **Safe**, **Suspicious**, or **Dangerous** with concrete reasons.
+- Explainable score: **Low Risk** (Unverified), **Suspicious**, or **Dangerous** with concrete reasons.
 - Unique 12-digit scan reference for every scan.
 - SQLite scan history and security-event log (`database/phishshield.db`).
 - In-memory per-IP rate limiting (salted SHA-256 IP hashes via `IP_HASH_SALT`) and repeated-domain / similar-message campaign detection.

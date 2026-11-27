@@ -131,13 +131,13 @@
       100,
       findings.reduce((acc, [weight]) => acc + weight, 0),
     );
-    let level = "Safe";
+    let level = "Low Risk";
     if (score >= 60) level = "Dangerous";
     else if (score >= 25) level = "Suspicious";
     const reasons =
       findings.length > 0
         ? findings.map(([, reason]) => reason)
-        : ["No common phishing indicators were found. This is not a guarantee that the content is safe."];
+        : ["No common phishing indicators were found in the text, though the destination itself is unverified and not guaranteed to be safe."];
     return {
       risk_score: score,
       risk_level: level,

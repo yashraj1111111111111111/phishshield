@@ -50,7 +50,7 @@ def test_scan_safe_and_dangerous_urls_with_ml_signal(client):
     safe_res = test_client.post("/api/scan", json={"content": "https://www.example.com", "language": "en"})
     assert safe_res.status_code == 200
     safe_body = safe_res.json()
-    assert safe_body["risk_level"] == "Safe"
+    assert safe_body["risk_level"] == "Low Risk"
     assert safe_body["content_type"] == "url"
     assert len(safe_body["scan_reference"]) == 12
     assert safe_body["ml_probability"] is not None

@@ -55,7 +55,7 @@ h1 { margin: 0 0 10px; font-size: 1.65rem; letter-spacing: -.03em; }
 .verdict { font-weight: 800; font-size: 1.05rem; }
 .verdict.dangerous { color: #ff8b89; }
 .verdict.suspicious { color: #ffce77; }
-.verdict.safe { color: #70ddbd; }
+.verdict.low-risk { color: #70ddbd; }
 .ref { color: #70ddbd; font-size: .75rem; font-weight: 700; letter-spacing: .08em; }
 ul { margin: 8px 0 14px; padding-left: 20px; color: #bdc9dc; line-height: 1.5; }
 .explanation {

@@ -32,6 +32,6 @@ def test_streamlit_app_safe_and_dangerous_scans(tmp_path, monkeypatch):
     at.selectbox[0].set_value("English")
     at.button[2].click().run()
     assert not at.exception
-    assert any("Safe" in item.value for item in at.success)
+    assert any("Low Risk" in item.value for item in at.success)
 
     reset_rate_limits()

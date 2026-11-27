@@ -12,16 +12,16 @@ test("raw IP HTTP link is flagged Dangerous before opening", () => {
   assert.equal(result.content_type, "url");
 });
 
-test("benign reserved domain stays Safe", () => {
+test("benign reserved domain stays Low Risk (unverified)", () => {
   const result = scanText("https://www.example.com");
-  assert.equal(result.risk_level, "Safe");
+  assert.equal(result.risk_level, "Low Risk");
   assert.equal(result.risk_score, 0);
 });
 
 test("brand spoof and shortened pressure link trigger warning threshold", () => {
   const brandSpoof = scanText("https://paypal-verify.example/login");
   assert.ok(brandSpoof.risk_score >= 25);
-  assert.notEqual(brandSpoof.risk_level, "Safe");
+  assert.notEqual(brandSpoof.risk_level, "Low Risk");
 
   const shortener = scanText("http://bit.ly/verify");
   assert.equal(shortener.risk_level, "Suspicious");

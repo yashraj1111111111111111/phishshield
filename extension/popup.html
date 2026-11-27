@@ -19,7 +19,7 @@
       <div class="actions" style="margin-top:8px">
         <select id="language" aria-label="Explanation language" style="flex:1">
           <option value="en">English</option>
-          <option value="hi">Hindi</option>
+          <option value="hi">Hindi (हिन्दी)</option>
         </select>
         <button id="scan-btn" class="btn-primary" type="submit" style="flex:1">Check safely</button>
       </div>
@@ -30,10 +30,13 @@
         <span id="verdict" class="verdict"></span>
         <span id="scan-ref" class="ref"></span>
       </div>
+      <div class="meter-track" aria-hidden="true">
+        <div id="meter-fill" class="meter-fill" style="width: 4%"></div>
+      </div>
       <div id="campaign-badge" class="campaign" hidden>Repeated campaign pattern</div>
+      <p id="explanation" class="explanation"></p>
       <ul id="reasons"></ul>
       <p id="ml-signal" class="ml-signal" hidden></p>
-      <p id="explanation" class="explanation"></p>
     </section>
     <footer>Analyzes text locally—never opens submitted links.</footer>
     <script src="scanner.js"></script>

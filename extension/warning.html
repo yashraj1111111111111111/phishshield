@@ -17,15 +17,18 @@
           <span id="verdict" class="verdict">Checking…</span>
           <span id="scan-ref" class="ref"></span>
         </div>
+        <div class="meter-track" aria-hidden="true">
+          <div id="meter-fill" class="meter-fill" style="width: 4%"></div>
+        </div>
         <div id="campaign-badge" class="campaign" hidden>Repeated scam/campaign pattern detected</div>
+        <p id="explanation" class="explanation"></p>
         <ul id="reasons"></ul>
         <p id="ml-signal" class="ml-signal" hidden></p>
-        <p id="explanation" class="explanation"></p>
         <div class="actions">
-          <button id="back-btn" class="btn-primary" type="button">Go back to safety</button>
+          <button id="back-btn" class="btn-primary" type="button">← Go back to safety</button>
           <select id="language" aria-label="Explanation language" style="width:auto">
             <option value="en">English</option>
-            <option value="hi">Hindi</option>
+            <option value="hi">Hindi (हिन्दी)</option>
           </select>
           <button id="proceed-btn" class="btn-danger" type="button">I understand the risk, open anyway</button>
         </div>

@@ -56,14 +56,27 @@ h1 { margin: 0 0 10px; font-size: 1.65rem; letter-spacing: -.03em; }
 .verdict.dangerous { color: #ff8b89; }
 .verdict.suspicious { color: #ffce77; }
 .verdict.low-risk { color: #70ddbd; }
+.meter-track {
+  height: 7px;
+  border-radius: 999px;
+  background: #132840;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.meter-fill { height: 100%; border-radius: 999px; transition: width .25s ease; }
+.meter-fill.dangerous { background: #ff8b89; }
+.meter-fill.suspicious { background: #ffce77; }
+.meter-fill.low-risk { background: #70ddbd; }
 .ref { color: #70ddbd; font-size: .75rem; font-weight: 700; letter-spacing: .08em; }
 ul { margin: 8px 0 14px; padding-left: 20px; color: #bdc9dc; line-height: 1.5; }
 .explanation {
   border-left: 3px solid #70ddbd;
-  padding-left: 12px;
+  background: rgba(112, 221, 189, .06);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
   color: #dbe6f7;
   line-height: 1.5;
-  margin: 12px 0;
+  margin: 10px 0 12px;
 }
 .ml-signal { color: #91a2bc; font-size: .84rem; margin: 8px 0; }
 .campaign {

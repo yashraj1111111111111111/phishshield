@@ -8,6 +8,10 @@ from app.services.abuse_protection import reset_rate_limits
 APP_PATH = Path(__file__).resolve().parents[1] / "streamlit_app.py"
 
 
+def _button_by_label(at: AppTest, label: str):
+    return next(btn for btn in at.button if btn.label == label)
+
+
 def test_streamlit_app_safe_and_dangerous_scans(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DATABASE_PATH", str(tmp_path / "st_test.db"))
     monkeypatch.setattr(config, "ENABLE_LLM_EXPLANATIONS", False)
@@ -18,19 +22,19 @@ def test_streamlit_app_safe_and_dangerous_scans(tmp_path, monkeypatch):
     assert not at.exception
 
     at.text_area[0].set_value("http://198.51.100.42/verify")
-    at.button[2].click().run()
+    _button_by_label(at, "Check safely").click().run()
     assert not at.exception
     assert any("Dangerous" in item.value for item in at.error)
 
     at.text_area[0].set_value("Urgent: share your OTP today to verify your KYC")
     at.selectbox[0].set_value("Hindi")
-    at.button[2].click().run()
+    _button_by_label(at, "Check safely").click().run()
     assert not at.exception
     assert any("खतरनाक" in item.value for item in at.info)
 
-    at.button[0].click().run()
+    _button_by_label(at, "Low-risk demo").click().run()
     at.selectbox[0].set_value("English")
-    at.button[2].click().run()
+    _button_by_label(at, "Check safely").click().run()
     assert not at.exception
     assert any("Low Risk" in item.value for item in at.success)
 

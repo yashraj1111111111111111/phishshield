@@ -5,6 +5,7 @@
 
   const urlBox = document.getElementById("target-url");
   const verdictEl = document.getElementById("verdict");
+  const meterEl = document.getElementById("meter-fill");
   const refEl = document.getElementById("scan-ref");
   const campaignEl = document.getElementById("campaign-badge");
   const reasonsEl = document.getElementById("reasons");
@@ -18,9 +19,13 @@
 
   function renderResult(data) {
     const level = data.risk_level || "Suspicious";
+    const cssLevel = level.toLowerCase().replace(/\s+/g, "-");
     const displayLevel = level === "Low Risk" ? "Low Risk (Unverified)" : level;
-    verdictEl.textContent = `${displayLevel} (${data.risk_score ?? 0}/100)`;
-    verdictEl.className = `verdict ${level.toLowerCase().replace(/\s+/g, "-")}`;
+    const score = data.risk_score ?? 0;
+    verdictEl.textContent = `${displayLevel} (${score}/100)`;
+    verdictEl.className = `verdict ${cssLevel}`;
+    meterEl.className = `meter-fill ${cssLevel}`;
+    meterEl.style.width = `${Math.max(4, score)}%`;
     refEl.textContent = data.scan_reference ? `SCAN REF: ${data.scan_reference}` : "LOCAL CHECK";
     campaignEl.hidden = !data.campaign_detected;
 

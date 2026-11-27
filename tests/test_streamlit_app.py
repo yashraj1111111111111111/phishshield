@@ -33,6 +33,8 @@ def test_streamlit_app_safe_and_dangerous_scans(tmp_path, monkeypatch):
     assert any("खतरनाक" in item.value for item in at.info)
 
     at.selectbox[0].set_value("English").run()
+    at.selectbox[1].set_value("Light").run()
+    assert not at.exception
     _button_by_label(at, "Low-risk URL").click().run()
     _button_by_label(at, "Check safely").click().run()
     assert not at.exception

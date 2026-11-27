@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { DEFAULT_API_URL, submitScan } from "./api.js";
 import "./PhishShield.css";
 
@@ -234,6 +234,8 @@ const COPY = {
     recentSub: "THIS TAB ONLY · LAST 4",
     recentEmpty: "Your completed checks will show up here. They’re kept only in this tab.",
     footerDesc: "Helping students, parents & families pause before they trust.",
+    themeLight: "Light",
+    themeDark: "Dark",
   },
   hi: {
     tagline: "क्लिक करने से पहले जाँचें।",
@@ -360,6 +362,8 @@ const COPY = {
     recentSub: "केवल इसी टैब में · अंतिम 4",
     recentEmpty: "आपकी पूरी हुई जाँचें यहाँ दिखेंगी। यह केवल इसी टैब में रहती हैं।",
     footerDesc: "छात्रों, माता-पिता और परिवारों को क्लिक करने से पहले रुककर सोचने में मदद।",
+    themeLight: "लाइट",
+    themeDark: "डार्क",
   },
 };
 
@@ -433,7 +437,23 @@ function RiskGauge({ score, tier, scoreLabel }) {
 export default function PhishShield() {
   const [content, setContent] = useState("");
   const [language, setLanguage] = useState("en");
+  const [theme, setTheme] = useState(() => {
+    try {
+      return window.localStorage.getItem("ps_theme") || "dark";
+    } catch {
+      return "dark";
+    }
+  });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.body.dataset.theme = theme;
+    try {
+      window.localStorage.setItem("ps_theme", theme);
+    } catch {
+      // Ignore storage errors in restricted contexts.
+    }
+  }, [theme]);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [recent, setRecent] = useState([]);
@@ -507,7 +527,7 @@ export default function PhishShield() {
   }
 
   return (
-    <main className="ps-app" lang={language}>
+    <main className="ps-app" lang={language} data-theme={theme}>
       <header className="topbar">
         <a className="brand" href="#top" aria-label="PhishShield home">
           <span className="brand-mark"><Icon name="shield" size={22} /></span>
@@ -516,6 +536,14 @@ export default function PhishShield() {
         <div className="topbar-right">
           <span className="privacy-mini"><i /> {t.privateBadge}</span>
           <span className="topbar-divider" />
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={() => setTheme((prev) => (prev === "dark" ? "light" : "dark"))}
+            aria-label="Toggle color theme"
+          >
+            {theme === "dark" ? `☀️ ${t.themeLight}` : `🌙 ${t.themeDark}`}
+          </button>
           <label className="sr-only" htmlFor="language">Explanation language</label>
           <select id="language" className="language-select" value={language} onChange={(e) => handleLanguageChange(e.target.value)}>
             <option value="en">English</option>

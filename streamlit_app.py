@@ -12,201 +12,256 @@ from app.services.scan_pipeline import ScanOutcome, run_scan_pipeline
 
 st.set_page_config(page_title="PhishShield — Check Before You Click", page_icon="🛡️", layout="wide")
 
-CUSTOM_CSS = """
+THEMES = {
+    "Dark": {
+        "bg": "#07111f",
+        "bg_grad": "rgba(35, 91, 110, 0.22)",
+        "header_bg": "rgba(7, 17, 31, 0.88)",
+        "card": "#0b1c31",
+        "card_hover": "#132a46",
+        "card_grad": "linear-gradient(145deg, #0e243b, #091829)",
+        "input_bg": "#071728",
+        "form_bg": "rgba(11, 28, 49, 0.72)",
+        "text": "#eaf2f8",
+        "heading": "#f3f7fa",
+        "muted": "#9eb0c0",
+        "subtle": "#8da2b3",
+        "accent": "#70ddbd",
+        "accent_ink": "#06211b",
+        "accent_soft": "rgba(112, 221, 189, 0.12)",
+        "border": "rgba(160, 190, 215, 0.18)",
+        "track": "#21364a",
+        "low": "#70ddbd",
+        "suspicious": "#ffce77",
+        "dangerous": "#ff8b89",
+        "alert_bg": "rgba(14, 34, 56, 0.92)",
+    },
+    "Light": {
+        "bg": "#f4f7fb",
+        "bg_grad": "rgba(12, 138, 114, 0.10)",
+        "header_bg": "rgba(244, 247, 251, 0.90)",
+        "card": "#ffffff",
+        "card_hover": "#eaf2f8",
+        "card_grad": "linear-gradient(145deg, #ffffff, #eef4fa)",
+        "input_bg": "#ffffff",
+        "form_bg": "rgba(255, 255, 255, 0.94)",
+        "text": "#0f2236",
+        "heading": "#091829",
+        "muted": "#41566c",
+        "subtle": "#52687e",
+        "accent": "#0c8a72",
+        "accent_ink": "#ffffff",
+        "accent_soft": "rgba(12, 138, 114, 0.10)",
+        "border": "rgba(15, 34, 54, 0.15)",
+        "track": "#dce6f0",
+        "low": "#0c8a72",
+        "suspicious": "#b86e00",
+        "dangerous": "#c83737",
+        "alert_bg": "#ffffff",
+    },
+}
+
+
+def _build_css(theme_name: str) -> str:
+    p = THEMES.get(theme_name, THEMES["Dark"])
+    return f"""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap');
 
-  .stApp {
-    background: radial-gradient(ellipse at 15% 5%, rgba(35, 91, 110, 0.22), transparent 36%), #07111f;
-    color: #eaf2f8;
+  .stApp {{
+    background: radial-gradient(ellipse at 15% 5%, {p['bg_grad']}, transparent 36%), {p['bg']};
+    color: {p['text']};
     font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
-  }
-  header[data-testid="stHeader"] {
-    background: rgba(7, 17, 31, 0.85) !important;
+  }}
+  header[data-testid="stHeader"] {{
+    background: {p['header_bg']} !important;
     backdrop-filter: blur(8px);
-    border-bottom: 1px solid rgba(160, 190, 215, 0.08);
-  }
+    border-bottom: 1px solid {p['border']};
+  }}
   header[data-testid="stHeader"] button,
   header[data-testid="stHeader"] svg,
-  header[data-testid="stHeader"] a {
-    color: #9bb0c1 !important;
-  }
-  .block-container {
+  header[data-testid="stHeader"] a {{
+    color: {p['muted']} !important;
+  }}
+  .block-container {{
     max-width: 1180px;
     padding-top: 3.6rem;
     padding-bottom: 2.5rem;
-  }
-  h1, h2, h3, h4 {
+  }}
+  h1, h2, h3, h4, .stMarkdown p, .stMarkdown li {{
+    color: {p['text']};
+  }}
+  h1, h2, h3, h4 {{
     font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-    color: #f3f7fa;
-  }
-  .ps-topbar {
+    color: {p['heading']};
+  }}
+  .ps-topbar {{
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding-bottom: 14px;
-    border-bottom: 1px solid rgba(160, 190, 215, 0.14);
+    border-bottom: 1px solid {p['border']};
     margin-bottom: 18px;
-  }
-  .ps-brand {
+  }}
+  .ps-brand {{
     display: flex;
     align-items: center;
     gap: 11px;
     font: 800 20px/1 'Manrope', sans-serif;
-    color: #f4f8fb;
-  }
-  .ps-brand-mark {
+    color: {p['heading']};
+  }}
+  .ps-brand-mark {{
     width: 36px;
     height: 36px;
     border-radius: 11px;
     display: grid;
     place-items: center;
-    background: rgba(112, 221, 189, 0.13);
-    border: 1px solid rgba(112, 221, 189, 0.28);
-    color: #70ddbd;
-  }
-  .ps-brand small {
+    background: {p['accent_soft']};
+    border: 1px solid {p['accent']};
+    color: {p['accent']};
+  }}
+  .ps-brand small {{
     display: block;
     margin-top: 4px;
-    color: #8297aa;
+    color: {p['subtle']};
     font: 700 9px/1 'DM Sans', sans-serif;
     letter-spacing: 1.7px;
-  }
-  .ps-brand .accent { color: #70ddbd; }
-  .ps-privacy-pill {
+  }}
+  .ps-brand .accent {{ color: {p['accent']}; }}
+  .ps-privacy-pill {{
     display: inline-flex;
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: #9bb0c1;
+    color: {p['muted']};
     padding: 6px 12px;
     border-radius: 999px;
-    border: 1px solid rgba(160, 190, 215, 0.16);
-    background: #0b1c31;
-  }
-  .ps-dot {
+    border: 1px solid {p['border']};
+    background: {p['card']};
+  }}
+  .ps-dot {{
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #70ddbd;
-    box-shadow: 0 0 10px #70ddbd77;
-  }
-  .ps-hero {
+    background: {p['accent']};
+  }}
+  .ps-hero {{
     display: grid;
     grid-template-columns: 1.25fr 0.75fr;
     gap: 28px;
     align-items: center;
     padding: 18px 0 26px;
-  }
-  .ps-eyebrow {
+  }}
+  .ps-eyebrow {{
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 1.6px;
-    color: #70ddbd;
+    color: {p['accent']};
     text-transform: uppercase;
     margin-bottom: 10px;
-  }
-  .ps-hero h1 {
+  }}
+  .ps-hero h1 {{
     font-size: clamp(2.1rem, 4.2vw, 3.3rem);
     line-height: 1.1;
     letter-spacing: -0.04em;
     margin: 0 0 12px;
-  }
-  .ps-hero h1 em { font-style: normal; color: #70ddbd; }
-  .ps-hero-sub {
-    color: #9eb0c0;
+    color: {p['heading']};
+  }}
+  .ps-hero h1 em {{ font-style: normal; color: {p['accent']}; }}
+  .ps-hero-sub {{
+    color: {p['muted']};
     font-size: 15px;
     line-height: 1.65;
     max-width: 560px;
     margin-bottom: 18px;
-  }
-  .ps-trust-row {
+  }}
+  .ps-trust-row {{
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-  }
-  .ps-trust-chip {
-    background: #0b1c31;
-    border: 1px solid rgba(112, 221, 189, 0.22);
+  }}
+  .ps-trust-chip {{
+    background: {p['card']};
+    border: 1px solid {p['border']};
     border-radius: 10px;
     padding: 8px 12px;
     font-size: 12px;
-    color: #dce8ef;
-  }
-  .ps-trust-chip span { display: block; font-size: 10px; color: #8297aa; margin-top: 2px; }
-  .ps-hero-card {
-    background: linear-gradient(145deg, #0e243b, #091829);
-    border: 1px solid rgba(112, 221, 189, 0.24);
+    color: {p['heading']};
+  }}
+  .ps-trust-chip span {{ display: block; font-size: 10px; color: {p['subtle']}; margin-top: 2px; }}
+  .ps-hero-card {{
+    background: {p['card_grad']};
+    border: 1px solid {p['border']};
     border-radius: 16px;
     padding: 22px;
     text-align: center;
-    box-shadow: 0 18px 46px rgba(2, 8, 20, 0.45);
-  }
-  .ps-hero-shield {
+    box-shadow: 0 14px 36px rgba(2, 8, 20, 0.14);
+  }}
+  .ps-hero-shield {{
     width: 72px;
     height: 78px;
     margin: 0 auto 12px;
     display: grid;
     place-items: center;
-    background: linear-gradient(145deg, #173b4b, #0c2638);
-    border: 1px solid #70ddbd;
+    background: {p['accent_soft']};
+    border: 1px solid {p['accent']};
     clip-path: polygon(50% 0, 91% 16%, 88% 66%, 50% 100%, 12% 66%, 9% 16%);
-    color: #70ddbd;
+    color: {p['accent']};
     font-size: 28px;
     font-weight: 800;
-  }
-  .ps-hero-card p { font-size: 12px; color: #b7cad8; margin: 4px 0 0; }
-  .ps-section-divider {
-    border-top: 1px solid rgba(160, 190, 215, 0.14);
+  }}
+  .ps-hero-card p {{ font-size: 12px; color: {p['muted']}; margin: 4px 0 0; }}
+  .ps-section-divider {{
+    border-top: 1px solid {p['border']};
     margin: 24px 0 20px;
     padding-top: 22px;
-  }
-  .ps-card-grid-3 {
+  }}
+  .ps-card-grid-3 {{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     margin-top: 14px;
-  }
-  .ps-card-grid-4 {
+  }}
+  .ps-card-grid-4 {{
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-top: 14px;
-  }
-  .ps-info-card {
-    background: #0b1c31;
-    border: 1px solid rgba(160, 190, 215, 0.14);
+  }}
+  .ps-info-card {{
+    background: {p['card']};
+    border: 1px solid {p['border']};
     border-radius: 12px;
     padding: 15px;
-  }
-  .ps-info-card b { display: block; font-size: 13px; color: #eaf2f8; margin-bottom: 6px; }
-  .ps-info-card p { font-size: 12px; line-height: 1.55; color: #8da2b3; margin: 0; }
-  .ps-tier-low { border-top: 3px solid #70ddbd; }
-  .ps-tier-low .ps-tier-range { color: #70ddbd; }
-  .ps-tier-sus { border-top: 3px solid #ffce77; }
-  .ps-tier-sus .ps-tier-range { color: #ffce77; }
-  .ps-tier-dan { border-top: 3px solid #ff8b89; }
-  .ps-tier-dan .ps-tier-range { color: #ff8b89; }
-  .ps-tier-range { font: 800 16px/1 'Manrope', sans-serif; margin-bottom: 8px; display: block; }
+  }}
+  .ps-info-card b {{ display: block; font-size: 13px; color: {p['heading']}; margin-bottom: 6px; }}
+  .ps-info-card p {{ font-size: 12px; line-height: 1.55; color: {p['subtle']}; margin: 0; }}
+  .ps-tier-low {{ border-top: 3px solid {p['low']}; }}
+  .ps-tier-low .ps-tier-range {{ color: {p['low']}; }}
+  .ps-tier-sus {{ border-top: 3px solid {p['suspicious']}; }}
+  .ps-tier-sus .ps-tier-range {{ color: {p['suspicious']}; }}
+  .ps-tier-dan {{ border-top: 3px solid {p['dangerous']}; }}
+  .ps-tier-dan .ps-tier-range {{ color: {p['dangerous']}; }}
+  .ps-tier-range {{ font: 800 16px/1 'Manrope', sans-serif; margin-bottom: 8px; display: block; }}
 
-  .ps-gauge-wrap {
+  .ps-gauge-wrap {{
     display: flex;
     align-items: center;
     gap: 18px;
-    background: linear-gradient(145deg, #0e2238, #0a1a2d);
-    border: 1px solid rgba(144, 176, 199, 0.18);
+    background: {p['card_grad']};
+    border: 1px solid {p['border']};
     border-radius: 14px;
     padding: 16px;
     margin-bottom: 12px;
-  }
-  .ps-gauge {
+  }}
+  .ps-gauge {{
     position: relative;
     width: 118px;
     height: 118px;
     flex: none;
-  }
-  .ps-gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .ps-gauge-center {
+  }}
+  .ps-gauge svg {{ width: 100%; height: 100%; transform: rotate(-90deg); }}
+  .ps-gauge-center {{
     position: absolute;
     inset: 0;
     display: flex;
@@ -214,70 +269,91 @@ CUSTOM_CSS = """
     align-items: center;
     justify-content: center;
     line-height: 1.1;
-  }
-  .ps-gauge-center strong { font: 800 26px 'Manrope', sans-serif; color: #f3f8fb; }
-  .ps-gauge-center small { font-size: 11px; color: #8297aa; }
-  .ps-gauge-center span { font-size: 10px; color: #8297aa; margin-top: 2px; }
-  .ps-ref-pill {
+  }}
+  .ps-gauge-center strong {{ font: 800 26px 'Manrope', sans-serif; color: {p['heading']}; }}
+  .ps-gauge-center small {{ font-size: 11px; color: {p['subtle']}; }}
+  .ps-gauge-center span {{ font-size: 10px; color: {p['subtle']}; margin-top: 2px; }}
+  .ps-ref-pill {{
     font-size: 11px;
     letter-spacing: 0.9px;
-    color: #70ddbd;
+    color: {p['accent']};
     font-weight: 700;
-  }
+  }}
   .stButton > button[kind="primary"],
-  [data-testid="stFormSubmitButton"] > button {
-    background: #70ddbd !important;
-    color: #06211b !important;
+  [data-testid="stFormSubmitButton"] > button {{
+    background: {p['accent']} !important;
+    color: {p['accent_ink']} !important;
     border: 0 !important;
     font-weight: 800 !important;
-  }
-  .stButton > button:not([kind="primary"]) {
-    background: #0b1c31 !important;
-    color: #dce8ef !important;
-    border: 1px solid rgba(112, 221, 189, 0.32) !important;
+  }}
+  .stButton > button:not([kind="primary"]) {{
+    background: {p['card']} !important;
+    color: {p['text']} !important;
+    border: 1px solid {p['border']} !important;
     border-radius: 9px !important;
     font-weight: 600 !important;
-  }
-  .stButton > button:not([kind="primary"]):hover {
-    background: #132a46 !important;
-    border-color: #70ddbd !important;
-    color: #ffffff !important;
-  }
-  [data-testid="stForm"] {
-    background: rgba(11, 28, 49, 0.72) !important;
-    border: 1px solid rgba(144, 176, 199, 0.22) !important;
+  }}
+  .stButton > button:not([kind="primary"]):hover {{
+    background: {p['card_hover']} !important;
+    border-color: {p['accent']} !important;
+    color: {p['heading']} !important;
+  }}
+  [data-testid="stForm"] {{
+    background: {p['form_bg']} !important;
+    border: 1px solid {p['border']} !important;
     border-radius: 14px !important;
     padding: 16px !important;
-  }
+  }}
   .stTextArea label,
   .stSelectbox label,
-  [data-testid="stCaptionContainer"] p {
-    color: #b7c8d6 !important;
-  }
-  .stTextArea textarea {
-    background-color: #071728 !important;
-    color: #eaf2f8 !important;
-    border-color: rgba(144, 176, 199, 0.28) !important;
-  }
-  .stTextArea textarea::placeholder {
-    color: #7f95a8 !important;
+  [data-testid="stCaptionContainer"] p {{
+    color: {p['muted']} !important;
+  }}
+  .stTextArea textarea {{
+    background-color: {p['input_bg']} !important;
+    color: {p['text']} !important;
+    border-color: {p['border']} !important;
+  }}
+  .stTextArea textarea::placeholder {{
+    color: {p['subtle']} !important;
     opacity: 1 !important;
-  }
-  div[data-baseweb="select"] > div {
-    background-color: #0b1c31 !important;
-    border-color: rgba(144, 176, 199, 0.28) !important;
-    color: #eaf2f8 !important;
-  }
-  @media (max-width: 780px) {
-    .ps-hero, .ps-card-grid-3, .ps-card-grid-4 { grid-template-columns: 1fr; }
-  }
+  }}
+  div[data-baseweb="select"] > div {{
+    background-color: {p['card']} !important;
+    border-color: {p['border']} !important;
+    color: {p['text']} !important;
+  }}
+  div[data-baseweb="select"] svg {{
+    fill: {p['muted']} !important;
+  }}
+  [data-testid="stAlert"] {{
+    background-color: {p['alert_bg']} !important;
+    color: {p['text']} !important;
+    border: 1px solid {p['border']} !important;
+  }}
+  [data-testid="stAlert"] p {{
+    color: {p['text']} !important;
+  }}
+  [data-testid="stExpander"] {{
+    background-color: {p['card']} !important;
+    border: 1px solid {p['border']} !important;
+    border-radius: 10px !important;
+  }}
+  [data-testid="stExpander"] summary {{
+    color: {p['heading']} !important;
+  }}
+  @media (max-width: 780px) {{
+    .ps-hero, .ps-card-grid-3, .ps-card-grid-4 {{ grid-template-columns: 1fr; }}
+  }}
 </style>
 """
+
 
 COPY = {
     "en": {
         "tagline": "CHECK BEFORE YOU CLICK.",
         "private": "Private by design",
+        "theme_labels": {"Dark": "🌙 Dark", "Light": "☀️ Light"},
         "eyebrow": "A calmer way to check suspicious messages",
         "hero_top": "A second look",
         "hero_accent": "before you click.",
@@ -348,6 +424,7 @@ COPY = {
     "hi": {
         "tagline": "क्लिक करने से पहले जाँचें।",
         "private": "गोपनीयता-प्रथम डिज़ाइन",
+        "theme_labels": {"Dark": "🌙 डार्क", "Light": "☀️ लाइट"},
         "eyebrow": "संदिग्ध संदेश जाँचने का शांत और सुरक्षित तरीका",
         "hero_top": "क्लिक करने से पहले,",
         "hero_accent": "एक बार जाँच लें।",
@@ -458,12 +535,13 @@ SAMPLE_OUTCOMES = {
 }
 
 
-def _render_gauge(outcome: ScanOutcome, score_label: str, mode_badge: str) -> str:
+def _render_gauge(outcome: ScanOutcome, score_label: str, mode_badge: str, theme_name: str) -> str:
+    p = THEMES.get(theme_name, THEMES["Dark"])
     score = max(0, min(100, int(outcome.risk_score)))
     radius = 48
     circ = 2 * 3.14159265 * radius
     progress = circ * (score / 100.0)
-    color = "#70ddbd" if outcome.risk_level == "Low Risk" else ("#ffce77" if outcome.risk_level == "Suspicious" else "#ff8b89")
+    color = p["low"] if outcome.risk_level == "Low Risk" else (p["suspicious"] if outcome.risk_level == "Suspicious" else p["dangerous"])
     ref = html.escape(str(outcome.scan_reference))
     ctype = html.escape(str(outcome.content_type).upper())
     badge = html.escape(mode_badge)
@@ -472,7 +550,7 @@ def _render_gauge(outcome: ScanOutcome, score_label: str, mode_badge: str) -> st
     <div class="ps-gauge-wrap">
       <div class="ps-gauge">
         <svg viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="{radius}" fill="none" stroke="#21364a" stroke-width="8" />
+          <circle cx="60" cy="60" r="{radius}" fill="none" stroke="{p['track']}" stroke-width="8" />
           <circle cx="60" cy="60" r="{radius}" fill="none" stroke="{color}" stroke-width="8"
             stroke-linecap="round" stroke-dasharray="{progress:.1f} {circ:.1f}" />
         </svg>
@@ -483,7 +561,7 @@ def _render_gauge(outcome: ScanOutcome, score_label: str, mode_badge: str) -> st
       </div>
       <div>
         <div class="ps-ref-pill">{badge} • SCAN REF: {ref}</div>
-        <div style="margin-top:6px;font-size:13px;color:#b7c8d6;">Type: <b>{ctype}</b></div>
+        <div style="margin-top:6px;font-size:13px;color:{p['muted']};">Type: <b>{ctype}</b></div>
       </div>
     </div>
     """
@@ -496,7 +574,6 @@ def _init_db() -> bool:
 
 
 _init_db()
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 if "client_id" not in st.session_state:
     st.session_state.client_id = f"st-{uuid.uuid4().hex[:12]}"
@@ -509,8 +586,8 @@ if "last_outcome" not in st.session_state:
 if "last_error" not in st.session_state:
     st.session_state.last_error = ""
 
-top_left, top_right = st.columns([4, 1])
-with top_right:
+top_left, top_lang, top_theme = st.columns([3.2, 0.9, 0.9])
+with top_lang:
     language_label = st.selectbox(
         "Explanation language",
         ["English", "Hindi"],
@@ -520,6 +597,17 @@ with top_right:
 
 lang_code = "hi" if language_label == "Hindi" else "en"
 t = COPY[lang_code]
+
+with top_theme:
+    theme_choice = st.selectbox(
+        "Theme",
+        ["Dark", "Light"],
+        format_func=lambda opt: t["theme_labels"].get(opt, opt),
+        label_visibility="collapsed",
+        key="theme_select",
+    )
+
+st.markdown(_build_css(theme_choice), unsafe_allow_html=True)
 
 with top_left:
     st.markdown(
@@ -632,7 +720,7 @@ with col_result:
         mode_badge = t["preview_badge"]
 
     if display_outcome is not None:
-        st.markdown(_render_gauge(display_outcome, t["risk_score"], mode_badge), unsafe_allow_html=True)
+        st.markdown(_render_gauge(display_outcome, t["risk_score"], mode_badge, theme_choice), unsafe_allow_html=True)
 
         if display_outcome.risk_level == "Dangerous":
             st.error(f"Verdict: **{display_outcome.risk_level}** ({display_outcome.risk_score}/100)")

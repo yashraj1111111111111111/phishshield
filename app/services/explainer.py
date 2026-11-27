@@ -12,6 +12,41 @@ HINDI_LEVELS = {
     "Dangerous": "खतरनाक (Dangerous)",
 }
 
+_HINDI_REASON_MAP: tuple[tuple[str, str], ...] = (
+    (
+        "Impersonates police, customs, or government authorities",
+        "यह संदेश पुलिस, कस्टम या सरकारी अधिकारी बनकर डराने और पैसे वसूलने की कोशिश कर रहा है।",
+    ),
+    (
+        "entering your UPI PIN or scanning a QR code",
+        "यह आपसे UPI PIN डालने या QR कोड स्कैन करने के लिए कह रहा है। पैसे प्राप्त करने के लिए कभी भी PIN या QR स्कैन की ज़रूरत नहीं होती।",
+    ),
+    (
+        "downloading an app or .APK file",
+        "यह आधिकारिक ऐप स्टोर के बाहर से ऐप या .APK फ़ाइल डाउनलोड करने के लिए कह रहा है, जिससे आपके फोन का डेटा और OTP चोरी हो सकता है।",
+    ),
+    (
+        "install a remote-access app",
+        "यह स्क्रीन शेयर करने या रिमोट-एक्सेस ऐप इंस्टॉल करने के लिए कह रहा है, जिससे ठग आपके बैंक खाते की जानकारी देख सकते हैं।",
+    ),
+    (
+        "Uses a domain extension",
+        "इस लिंक में ऐसे डोमेन एक्सटेंशन (जैसे .xyz या .top) का उपयोग किया गया है जिनका इस्तेमाल अक्सर फर्जी वेबसाइटों द्वारा किया जाता है।",
+    ),
+    (
+        "well-known brand or service name",
+        "असली संस्था का रूप धारण करने के लिए एक अनधिकृत वेब पते के अंदर एक प्रसिद्ध ब्रांड या सेवा का नाम शामिल है।",
+    ),
+    (
+        "downloadable app or executable file",
+        "यह लिंक किसी सामान्य वेबपेज के बजाय सीधे डाउनलोड होने वाली ऐप या फ़ाइल (.apk/.exe) से जुड़ता है।",
+    ),
+    (
+        "domain contains multiple hyphens",
+        "वेबसाइट के डोमेन में कई हाइफ़न (-) हैं, यह नकली लिंक को असली दिखाने की एक आम तरकीब है।",
+    ),
+)
+
 _ALWAYS_SUSPICIOUS_RE = re.compile(
     r"(ignore (?:all |previous )?instructions|system prompt|developer prompt|"
     r"</?evidence_data>|<\s*script|javascript:|risk_score|risk_level|"
@@ -25,8 +60,16 @@ _UNSAFE_ASSURANCE_RE = re.compile(
 )
 
 
+def _translate_reasons_to_hindi(reasons: list[str]) -> list[str]:
+    """Translate known English detector reasons to plain-language Hindi where available."""
+    translated: list[str] = []
+    for reason in reasons:
+        match = next((hi for needle, hi in _HINDI_REASON_MAP if needle in reason), None)
+        translated.append(match or reason)
+    return translated
+
+
 def _fallback_explanation(level: str, reasons: list[str], language: str) -> str:
-    joined_reasons = " ".join(reasons)
     if language == "hi":
         hindi_level = HINDI_LEVELS.get(level, level)
         advice = (
@@ -34,7 +77,9 @@ def _fallback_explanation(level: str, reasons: list[str], language: str) -> str:
             if level != "Low Risk"
             else "टेक्स्ट में कोई सामान्य फ़िशिंग संकेत नहीं मिला, लेकिन यह लिंक सत्यापित नहीं है—भरोसा करने से पहले वेबसाइट की जांच जरूर करें।"
         )
-        return f"यह सामग्री {hindi_level} श्रेणी में है। {advice} कारण: {joined_reasons}"
+        hindi_reasons = " ".join(_translate_reasons_to_hindi(reasons))
+        return f"यह सामग्री {hindi_level} श्रेणी में है। {advice} कारण: {hindi_reasons}"
+    joined_reasons = " ".join(reasons)
     if level == "Low Risk":
         return f"This content is rated Low Risk (Unverified). {joined_reasons}"
     return f"This content is rated {level}. {joined_reasons}"

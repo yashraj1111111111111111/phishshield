@@ -3,9 +3,101 @@ import re
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-SUSPICIOUS_WORDS = {"verify", "urgent", "kyc", "otp", "reward", "claim", "prize", "blocked", "password", "payment", "parcel", "click here", "limited time"}
+SUSPICIOUS_WORDS = {
+    "verify",
+    "urgent",
+    "kyc",
+    "otp",
+    "reward",
+    "claim",
+    "prize",
+    "blocked",
+    "password",
+    "payment",
+    "parcel",
+    "click here",
+    "limited time",
+}
 SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "goo.gl", "is.gd", "cutt.ly", "shorturl.at"}
-BRANDS = {"amazon", "google", "microsoft", "paypal", "netflix", "apple", "instagram", "facebook", "whatsapp", "sbi", "hdfc", "icici"}
+ABUSED_TLDS = (".xyz", ".top", ".tk", ".ml", ".ga", ".cf", ".gq", ".click", ".loan", ".vip", ".icu", ".buzz")
+DANGEROUS_DOWNLOAD_EXTS = (".apk", ".exe", ".zip", ".scr", ".bat")
+
+BRAND_OFFICIAL_DOMAINS: dict[str, tuple[str, ...]] = {
+    "amazon": ("amazon.com", "amazon.in", "amazon.co.uk"),
+    "google": ("google.com", "google.co.in", "accounts.google.com", "pay.google.com"),
+    "microsoft": ("microsoft.com", "live.com", "office.com"),
+    "paypal": ("paypal.com",),
+    "netflix": ("netflix.com",),
+    "apple": ("apple.com", "icloud.com"),
+    "instagram": ("instagram.com",),
+    "facebook": ("facebook.com", "fb.com"),
+    "whatsapp": ("whatsapp.com",),
+    "sbi": ("sbi.co.in", "onlinesbi.sbi", "sbi.bank.in"),
+    "hdfc": ("hdfcbank.com", "hdfc.com"),
+    "icici": ("icicibank.com", "icici.com"),
+    "axis": ("axisbank.com", "axisbank.co.in"),
+    "paytm": ("paytm.com",),
+    "phonepe": ("phonepe.com",),
+    "gpay": ("pay.google.com",),
+    "flipkart": ("flipkart.com",),
+    "irctc": ("irctc.co.in", "irctc.com"),
+    "epfo": ("epfindia.gov.in",),
+    "uidai": ("uidai.gov.in",),
+    "aadhaar": ("uidai.gov.in",),
+}
+
+MESSAGE_SCAM_RULES: list[tuple[str, int, re.Pattern[str], str]] = [
+    (
+        "digital_arrest",
+        35,
+        re.compile(
+            r"\b(?:cbi|cyber\s*crime|cyber\s*police|arrest\s*warrant|digital\s*arrest|"
+            r"parcel\s*seized|customs\s*department|narcotics|money\s*laundering|"
+            r"legal\s*action|court\s*notice|trai|sim\s*disconnected)\b",
+            flags=re.IGNORECASE,
+        ),
+        "Impersonates police, customs, or government authorities to create fear and pressure you into paying.",
+    ),
+    (
+        "upi_qr",
+        35,
+        re.compile(
+            r"\b(?:upi\s*pin|enter\s*pin|scan\s*qr|receive\s*money|claim\s*cashback|"
+            r"collect\s*request|refund\s*approved|payment\s*request|paytm\s*cashback|"
+            r"gpay\s*reward|phonepe\s*reward)\b",
+            flags=re.IGNORECASE,
+        ),
+        "Tries to trick you into entering your UPI PIN or scanning a QR code. You never need a PIN or QR scan to receive money.",
+    ),
+    (
+        "apk_challan",
+        40,
+        re.compile(
+            r"(?:\.apk\b|\b(?:install\s*app|download\s*app|e-?challan|traffic\s*challan|"
+            r"rto|pm\s*kisan|apk\s*file|update\s*app\s*via\s*link)\b)",
+            flags=re.IGNORECASE,
+        ),
+        "Mentions downloading an app or .APK file outside official app stores, which can install spyware and steal your OTPs.",
+    ),
+    (
+        "remote_access",
+        35,
+        re.compile(
+            r"\b(?:anydesk|teamviewer|quicksupport|rustdesk|screen\s*share|share\s*screen|"
+            r"remote\s*access|support\s*code)\b",
+            flags=re.IGNORECASE,
+        ),
+        "Asks you to share your screen or install a remote-access app, which allows scammers to watch your screen and steal bank details.",
+    ),
+]
+
+_URGENCY_RE = re.compile(r"\b(today|immediately|within \d+ hours?|last chance)\b", flags=re.IGNORECASE)
+_SENSITIVE_INFO_RE = re.compile(r"\b(otp|cvv|pin|password)\b", flags=re.IGNORECASE)
+_BARE_DOMAIN_TLDS = "|".join(tld.lstrip(".") for tld in ABUSED_TLDS) + "|com|in|org|net|co\\.in"
+_MESSAGE_URL_RE = re.compile(
+    rf"(?:(?:https?://|www\.)[^\s]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:{_BARE_DOMAIN_TLDS})(?:/[^\s]*)?)",
+    flags=re.IGNORECASE,
+)
 
 
 @dataclass
@@ -24,6 +116,16 @@ def _is_ip(hostname: str) -> bool:
         return False
 
 
+def _is_official_host(host: str, official_domains: tuple[str, ...]) -> bool:
+    """Return True if host matches an official domain or one of its subdomains."""
+    return any(host == domain or host.endswith(f".{domain}") for domain in official_domains)
+
+
+def _extract_message_urls(message: str) -> list[str]:
+    """Extract explicit URLs and bare suspicious-TLD domains from message text."""
+    return [match.group(0).rstrip(".,;:!?)") for match in _MESSAGE_URL_RE.finditer(message)]
+
+
 def _url_reasons(url: str) -> list[tuple[int, str]]:
     findings: list[tuple[int, str]] = []
     candidate = url if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", url) else f"https://{url}"
@@ -31,9 +133,11 @@ def _url_reasons(url: str) -> list[tuple[int, str]]:
         parsed = urlparse(candidate)
         scheme = parsed.scheme
         host = (parsed.hostname or "").lower()
+        path = (parsed.path or "").lower()
     except ValueError:
         scheme = "http" if candidate.lower().startswith("http://") else "https"
         host = ""
+        path = candidate.split("?", 1)[0].split("#", 1)[0].lower()
         findings.append((15, "The link has malformed brackets or host formatting."))
     full_url = candidate.lower()
 
@@ -43,6 +147,10 @@ def _url_reasons(url: str) -> list[tuple[int, str]]:
         findings.append((30, "The link uses a raw IP address instead of a normal website name."))
     if host in SHORTENERS:
         findings.append((20, "This is a shortened link, which can hide its real destination."))
+    if host and any(host.endswith(tld) for tld in ABUSED_TLDS):
+        findings.append((20, "Uses a domain extension (like .xyz or .top) frequently abused by temporary scam websites."))
+    if path.endswith(DANGEROUS_DOWNLOAD_EXTS):
+        findings.append((45, "Links directly to a downloadable app or executable file (.apk/.exe) instead of a standard webpage."))
     if len(candidate) > 100:
         findings.append((10, "The link is unusually long, which can be used to hide a misleading destination."))
     if "%" in candidate or "@" in candidate:
@@ -50,11 +158,16 @@ def _url_reasons(url: str) -> list[tuple[int, str]]:
     if host.count(".") >= 3:
         findings.append((10, "The link has many subdomains, a pattern often used to imitate trusted sites."))
     if host.count("-") >= 2:
-        findings.append((8, "The domain has multiple hyphens, which is common in imitation domains."))
-    for brand in BRANDS:
+        findings.append((15, "The website domain contains multiple hyphens, a common trick used to make fake links look official."))
+    for brand, official_domains in BRAND_OFFICIAL_DOMAINS.items():
         # A brand in a non-official-looking host is only a hint, never proof.
-        if brand in host and not (host == f"{brand}.com" or host.endswith(f".{brand}.com")):
-            findings.append((25, f"The domain mentions '{brand}' but does not look like its official domain."))
+        if brand in host and not _is_official_host(host, official_domains):
+            findings.append(
+                (
+                    30,
+                    f"Contains a well-known brand or service name ('{brand}') inside an unofficial web address to impersonate a trusted organization.",
+                )
+            )
             break
     word_hits = sorted(word for word in SUSPICIOUS_WORDS if word in full_url)
     if word_hits:
@@ -68,12 +181,31 @@ def _message_reasons(message: str) -> list[tuple[int, str]]:
     hits = sorted(word for word in SUSPICIOUS_WORDS if word in lowered)
     if hits:
         findings.append((min(35, 6 * len(hits)), f"The message uses scam-associated language: {', '.join(hits[:5])}."))
-    if re.search(r"\b(otp|cvv|pin|password)\b", lowered):
+
+    has_sensitive = bool(_SENSITIVE_INFO_RE.search(lowered))
+    if has_sensitive:
         findings.append((30, "The message asks for sensitive authentication or payment information."))
-    if re.search(r"\b(today|immediately|within \d+ hours?|last chance)\b", lowered):
+
+    has_urgency = bool(_URGENCY_RE.search(lowered)) or any(w in hits for w in ("blocked", "urgent", "kyc", "limited time"))
+    if _URGENCY_RE.search(lowered):
         findings.append((15, "The message creates urgency, a common social-engineering tactic."))
-    for url in re.findall(r"(?:https?://|www\.)[^\s]+", message, flags=re.IGNORECASE):
+
+    matched_categories: set[str] = set()
+    for category, weight, pattern, reason in MESSAGE_SCAM_RULES:
+        if pattern.search(lowered):
+            matched_categories.add(category)
+            findings.append((weight, reason))
+
+    urls = _extract_message_urls(message)
+    for url in urls:
         findings.extend(_url_reasons(url))
+
+    has_threat = has_urgency or ("digital_arrest" in matched_categories)
+    has_action = has_sensitive or bool(urls) or bool(matched_categories & {"upi_qr", "apk_challan", "remote_access"})
+    if has_threat and has_action:
+        findings.append(
+            (15, "Combines urgent pressure or legal threats with a request for sensitive action (OTP, PIN, app install, or link).")
+        )
     return findings
 
 

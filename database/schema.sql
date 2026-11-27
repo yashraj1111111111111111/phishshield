@@ -23,3 +23,15 @@ CREATE TABLE IF NOT EXISTS security_events (
 
 CREATE INDEX IF NOT EXISTS idx_scans_created_at ON scans(created_at);
 CREATE INDEX IF NOT EXISTS idx_security_events_client_hash ON security_events(client_hash);
+
+CREATE TABLE IF NOT EXISTS scan_fingerprints (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scan_id INTEGER,
+    content_type TEXT NOT NULL,
+    domain_hashes_json TEXT NOT NULL,
+    message_hash TEXT,
+    shingle_hashes_json TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_scan_fingerprints_created_at ON scan_fingerprints(created_at);

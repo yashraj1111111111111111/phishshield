@@ -181,3 +181,72 @@ def test_proxy_headers_ignored_unless_trusted(client, monkeypatch):
             "SELECT client_hash FROM security_events ORDER BY id DESC LIMIT 1"
         ).fetchone()[0]
     assert last_hash == hash_client_ip("198.51.100.10")
+
+
+def test_scan_content_redacted_by_default_and_opt_in_stores_text(client, monkeypatch):
+    test_client, db_path = client
+    secret_phrase = "SecretAccount9988"
+    res = test_client.post(
+        "/api/scan",
+        json={"content": f"Urgent KYC {secret_phrase} http://198.51.100.42/verify", "language": "en"},
+    )
+    assert res.status_code == 200
+
+    with sqlite3.connect(db_path) as conn:
+        stored = conn.execute("SELECT submitted_content FROM scans ORDER BY id DESC LIMIT 1").fetchone()[0]
+        fp_row = conn.execute(
+            "SELECT domain_hashes_json, message_hash, shingle_hashes_json FROM scan_fingerprints ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+    assert stored == "[redacted]"
+    assert secret_phrase not in stored
+    assert fp_row is not None
+    assert "198.51.100.42" not in fp_row[0]
+    assert secret_phrase not in (fp_row[1] or "")
+    assert secret_phrase not in fp_row[2]
+
+    monkeypatch.setattr(config, "STORE_SCAN_CONTENT", True)
+    opt_in = test_client.post(
+        "/api/scan",
+        json={"content": "Urgent: verify OTP at https://www.example.com", "language": "en"},
+    )
+    assert opt_in.status_code == 200
+    with sqlite3.connect(db_path) as conn:
+        stored_opt_in = conn.execute("SELECT submitted_content FROM scans ORDER BY id DESC LIMIT 1").fetchone()[0]
+    assert stored_opt_in == "Urgent: verify OTP at https://www.example.com"
+
+
+def test_fuzzy_message_campaign_without_raw_storage_and_retention_cleanup(client, monkeypatch):
+    test_client, db_path = client
+    monkeypatch.setattr(config, "SCAN_RETENTION_DAYS", 7)
+
+    messages = [
+        "Urgent KYC verification needed today share OTP 101 at http://198.51.100.42/a",
+        "Urgent KYC verification needed right now share OTP 202 at http://203.0.113.9/b",
+        "Urgent KYC verification needed immediately share OTP 303 at http://192.0.2.8/c",
+    ]
+    for msg in messages:
+        res = test_client.post("/api/scan", json={"content": msg, "language": "en"})
+        assert res.status_code == 200
+        body = res.json()
+
+    assert body["campaign_detected"] is True
+    assert any("similar suspicious message" in reason for reason in body["reasons"])
+
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("UPDATE scans SET created_at = datetime('now', '-10 days') WHERE id = 1")
+        conn.execute("UPDATE scan_fingerprints SET created_at = datetime('now', '-10 days') WHERE scan_id = 1")
+        conn.execute("INSERT INTO security_events (client_hash, event_type, request_count, window_start, action_taken, created_at) VALUES ('old', 'rate_limit', 11, 'old', 'blocked', datetime('now', '-10 days'))")
+        conn.commit()
+
+    trigger = test_client.post("/api/scan", json={"content": "https://www.example.com", "language": "en"})
+    assert trigger.status_code == 200
+
+    with sqlite3.connect(db_path) as conn:
+        expired_scans = conn.execute("SELECT COUNT(*) FROM scans WHERE id = 1").fetchone()[0]
+        expired_fps = conn.execute("SELECT COUNT(*) FROM scan_fingerprints WHERE scan_id = 1").fetchone()[0]
+        expired_events = conn.execute("SELECT COUNT(*) FROM security_events WHERE client_hash = 'old'").fetchone()[0]
+        total_scans = conn.execute("SELECT COUNT(*) FROM scans").fetchone()[0]
+    assert expired_scans == 0
+    assert expired_fps == 0
+    assert expired_events == 0
+    assert total_scans == 3

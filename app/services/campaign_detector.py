@@ -1,35 +1,14 @@
-"""Detect repeated-domain and similar-message campaign bursts from recent scans."""
+"""Detect repeated-domain and similar-message campaign bursts from recent salted fingerprints."""
 from __future__ import annotations
 
-import re
-from difflib import SequenceMatcher
-from urllib.parse import urlparse
-
-from app.database.repository import fetch_recent_scans, save_security_event
+from app.database.repository import fetch_recent_fingerprints, save_security_event
 from app.services.abuse_protection import hash_client_ip
-
-URL_PATTERN = re.compile(r"(?:https?://|www\.)[^\s]+", flags=re.IGNORECASE)
-SCHEME_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
-
-
-def _extract_hosts(content: str, content_type: str) -> set[str]:
-    candidates = [content.strip()] if content_type == "url" else URL_PATTERN.findall(content)
-    hosts: set[str] = set()
-    for raw in candidates:
-        candidate = raw if SCHEME_PATTERN.match(raw) else f"https://{raw}"
-        try:
-            host = (urlparse(candidate).hostname or "").lower()
-        except ValueError:
-            continue
-        if host:
-            hosts.add(host)
-    return hosts
-
-
-def _normalize_message(message: str) -> str:
-    without_urls = URL_PATTERN.sub("<url>", message.lower())
-    without_numbers = re.sub(r"\b\d+\b", "<num>", without_urls)
-    return " ".join(without_numbers.split())
+from app.services.fingerprints import (
+    build_scan_fingerprints,
+    extract_hosts,
+    fingerprints_similar,
+    salted_hash,
+)
 
 
 def detect_campaign(
@@ -44,16 +23,18 @@ def detect_campaign(
     if risk_score < 25:
         return []
 
-    recent = fetch_recent_scans(window_minutes=window_minutes)
+    recent = fetch_recent_fingerprints(window_minutes=window_minutes)
     findings: list[str] = []
     client_hash = hash_client_ip(client_ip)
+    current_fp = build_scan_fingerprints(content, content_type)
 
-    current_hosts = _extract_hosts(content, content_type)
+    current_hosts = extract_hosts(content, content_type)
     if current_hosts:
         max_domain_count = 1
         matched_host = ""
         for host in sorted(current_hosts):
-            count = 1 + sum(1 for r_type, r_content in recent if host in _extract_hosts(r_content, r_type))
+            host_hash = salted_hash("domain", host)
+            count = 1 + sum(1 for item in recent if host_hash in item["domain_hashes"])
             if count > max_domain_count:
                 max_domain_count = count
                 matched_host = host
@@ -63,19 +44,22 @@ def detect_campaign(
                 f"Campaign pattern detected: '{matched_host}' appeared in {max_domain_count} recent scans."
             )
 
-    if content_type == "message":
-        norm_current = _normalize_message(content)
-        if len(norm_current) >= 12:
-            similar_count = 1 + sum(
-                1
-                for r_type, r_content in recent
-                if r_type == "message"
-                and SequenceMatcher(None, norm_current, _normalize_message(r_content)).ratio() >= 0.8
+    if content_type == "message" and (current_fp.message_hash or current_fp.shingle_hashes):
+        similar_count = 1 + sum(
+            1
+            for item in recent
+            if item["content_type"] == "message"
+            and fingerprints_similar(
+                current_fp.message_hash,
+                current_fp.shingle_hashes,
+                item["message_hash"],
+                item["shingle_hashes"],
             )
-            if similar_count >= threshold:
-                save_security_event(client_hash, "campaign_message", similar_count, "flagged_campaign_pattern")
-                findings.append(
-                    f"Campaign pattern detected: a similar suspicious message appeared {similar_count} times recently."
-                )
+        )
+        if similar_count >= threshold:
+            save_security_event(client_hash, "campaign_message", similar_count, "flagged_campaign_pattern")
+            findings.append(
+                f"Campaign pattern detected: a similar suspicious message appeared {similar_count} times recently."
+            )
 
     return findings

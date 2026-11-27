@@ -61,8 +61,10 @@ For Streamlit Community Cloud, point the app to `streamlit_app.py` on `main`. Th
 | `OLLAMA_URL` | `http://localhost:11434/api/generate` | Ollama generate endpoint |
 | `ENABLE_LLM_EXPLANATIONS` | `false` | Enable Ollama explanations (`true` / `false`) |
 | `RATE_LIMIT_PER_MINUTE` | `10` | Max scans per 60-second sliding window |
-| `IP_HASH_SALT` | `phishshield-local-dev-salt` | Secret salt for SHA-256 IP hashing in `security_events` |
+| `IP_HASH_SALT` | `phishshield-local-dev-salt` | Secret salt for SHA-256 hashing (`security_events` & `scan_fingerprints`) |
 | `TRUST_PROXY_HEADERS` | `false` | Trust left-most `X-Forwarded-For` IP only behind a trusted proxy |
+| `STORE_SCAN_CONTENT` | `false` | Persist raw submitted text in `scans` (`false` stores `"[redacted]"`) |
+| `SCAN_RETENTION_DAYS` | `30` | Days before `scans`, `scan_fingerprints`, and `security_events` auto-purge (`0` disables) |
 | `VITE_API_URL` | `http://127.0.0.1:8001` | Frontend API base URL override |
 
 ## API Reference
@@ -125,7 +127,7 @@ With the backend running on port `8001`, you can also run the live end-to-end su
 - **Zero-click safety:** Submitted URLs and messages are parsed strictly as strings and never fetched, rendered, or executed.
 - **Hashed security logs:** `security_events` records a truncated SHA-256 hash of `IP_HASH_SALT + client_ip` rather than raw IP addresses.
 - **Local LLM option:** When `ENABLE_LLM_EXPLANATIONS=true`, prompts are sent only to your local `OLLAMA_URL`, delimited inside `<evidence_data>` tags, length-capped, and checked for prompt-injection phrases before display.
-- **Scan persistence note:** `scans.submitted_content` currently stores submitted text in `database/phishshield.db` to support scan references and 15-minute campaign similarity matching. Never commit `.env`, `database/*.db`, or `data/raw/`.
+- **Redacted persistence & retention:** `STORE_SCAN_CONTENT` defaults to `false`, so `scans.submitted_content` records `"[redacted]"` instead of raw user input. 15-minute campaign matching uses salted non-reversible digests in `scan_fingerprints`, and records older than `SCAN_RETENTION_DAYS` (default `30`) are purged automatically on write. Never commit `.env`, `database/*.db`, or `data/raw/`.
 
 ## Limitations
 

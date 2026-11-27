@@ -43,6 +43,15 @@ npm run dev
 
 Open the local address Vite prints (normally `http://localhost:5173`). Override the backend URL with `VITE_API_URL` if needed.
 
+### Streamlit (standalone or Streamlit Community Cloud)
+
+```bash
+source .venv/bin/activate
+streamlit run streamlit_app.py
+```
+
+To deploy on **Streamlit Community Cloud**, push to GitHub and point the app entrypoint to `streamlit_app.py`. When deployed remotely without a local Ollama server, PhishShield automatically uses its built-in English and Hindi explanations.
+
 ## Local Qwen explanation (optional)
 
 PhishShield works without an AI model. To enable explanations through Ollama (`qwen3.5:9b`), make sure Ollama is running and set these variables in `.env` (or export them) before starting the backend:

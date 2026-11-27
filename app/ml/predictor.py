@@ -25,7 +25,10 @@ def predict_url_probability(content: str, content_type: str, model_path: Path = 
     urls = [content.strip()] if content_type == "url" else URL_PATTERN.findall(content)
     if not urls:
         return None
-    stat = model_path.stat()
-    model = _load_model(str(model_path), stat.st_mtime_ns)
-    probabilities = model.predict_proba([url_features(url) for url in urls])
+    try:
+        stat = model_path.stat()
+        model = _load_model(str(model_path), stat.st_mtime_ns)
+        probabilities = model.predict_proba([url_features(url) for url in urls])
+    except Exception:
+        return None
     return round(float(max(row[1] for row in probabilities)), 4)

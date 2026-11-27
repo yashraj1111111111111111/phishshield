@@ -5,12 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from app.database.connection import initialize_database
-from app.database.repository import save_scan
-from app.detectors.scanner import scan
-from app.ml.predictor import predict_url_probability
-from app.services.abuse_protection import enforce_rate_limit
-from app.services.campaign_detector import detect_campaign
-from app.services.explainer import plain_language_explanation
+from app.services.scan_pipeline import run_scan_pipeline
 
 
 @asynccontextmanager
@@ -53,29 +48,14 @@ def health() -> dict[str, str]:
 @app.post("/api/scan", response_model=ScanResponse)
 def create_scan(payload: ScanRequest, request: Request) -> ScanResponse:
     client_ip = request.client.host if request.client else "unknown"
-    enforce_rate_limit(client_ip)
-    result = scan(payload.content)
-    ml_probability = predict_url_probability(payload.content, result.content_type)
-    campaign_reasons = detect_campaign(payload.content, result.content_type, result.score, client_ip)
-    reasons = [*result.reasons, *campaign_reasons]
-    campaign_detected = bool(campaign_reasons)
-    reference = save_scan(
-        payload.content,
-        result.content_type,
-        result.score,
-        result.level,
-        reasons,
-        payload.language,
-        ml_probability=ml_probability,
-    )
-    explanation = plain_language_explanation(result.level, reasons, payload.language)
+    outcome = run_scan_pipeline(payload.content, payload.language, client_ip)
     return ScanResponse(
-        scan_reference=reference,
-        risk_score=result.score,
-        risk_level=result.level,
-        content_type=result.content_type,
-        reasons=reasons,
-        explanation=explanation,
-        ml_probability=ml_probability,
-        campaign_detected=campaign_detected,
+        scan_reference=outcome.scan_reference,
+        risk_score=outcome.risk_score,
+        risk_level=outcome.risk_level,
+        content_type=outcome.content_type,
+        reasons=outcome.reasons,
+        explanation=outcome.explanation,
+        ml_probability=outcome.ml_probability,
+        campaign_detected=outcome.campaign_detected,
     )

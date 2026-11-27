@@ -82,6 +82,10 @@ def test_scan_hindi_fallback_and_validation(client):
     bad_res = test_client.post("/api/scan", json={"content": "hi", "language": "en"})
     assert bad_res.status_code == 422
 
+    ipv6_res = test_client.post("/api/scan", json={"content": "http://[invalid-ipv6/login", "language": "en"})
+    assert ipv6_res.status_code == 200
+    assert ipv6_res.json()["risk_score"] >= 25
+
 
 def test_rate_limit_logs_salted_hash_and_returns_429(client):
     test_client, db_path = client

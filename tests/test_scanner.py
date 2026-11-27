@@ -15,3 +15,9 @@ def test_benign_reserved_domain_has_low_risk():
 def test_otp_message_is_flagged():
     result = scan("Urgent: share your OTP today to verify your KYC")
     assert result.level == "Dangerous"
+
+
+def test_malformed_ipv6_url_does_not_crash():
+    result = scan("http://[invalid-ipv6/login")
+    assert result.content_type == "url"
+    assert result.score >= 25

@@ -17,7 +17,10 @@ def _extract_hosts(content: str, content_type: str) -> set[str]:
     hosts: set[str] = set()
     for raw in candidates:
         candidate = raw if SCHEME_PATTERN.match(raw) else f"https://{raw}"
-        host = (urlparse(candidate).hostname or "").lower()
+        try:
+            host = (urlparse(candidate).hostname or "").lower()
+        except ValueError:
+            continue
         if host:
             hosts.add(host)
     return hosts

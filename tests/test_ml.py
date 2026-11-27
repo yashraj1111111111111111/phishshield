@@ -7,6 +7,8 @@ from app.ml.predictor import MODEL_PATH, predict_url_probability
 def test_mlp_does_not_misclassify_benign_deep_path_urls():
     benign_urls = [
         "https://www.example.com",
+        "https://example.com",
+        "https://example.edu",
         "https://chrisleverseo.com/tools/random-url-generator/",
         "https://docs.python.org/3/library/pathlib.html",
         "https://example.org/search?q=random&page=2",

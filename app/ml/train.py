@@ -46,6 +46,8 @@ def evaluate_behavioral_sanity(model) -> tuple[bool, list[dict]]:
     """Verify the trained model does not trigger shortcut false positives on benign deep-path URLs."""
     probes = [
         ("https://www.example.com", 0, 0.25),
+        ("https://example.com", 0, 0.35),
+        ("https://example.edu", 0, 0.35),
         ("https://example.org/tools/random-url-generator/", 0, 0.35),
         ("https://docs.example.edu/3/library/pathlib.html", 0, 0.35),
         ("http://198.51.100.42/verify", 1, 0.70),

@@ -27,11 +27,17 @@ def _is_ip(hostname: str) -> bool:
 def _url_reasons(url: str) -> list[tuple[int, str]]:
     findings: list[tuple[int, str]] = []
     candidate = url if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", url) else f"https://{url}"
-    parsed = urlparse(candidate)
-    host = (parsed.hostname or "").lower()
+    try:
+        parsed = urlparse(candidate)
+        scheme = parsed.scheme
+        host = (parsed.hostname or "").lower()
+    except ValueError:
+        scheme = "http" if candidate.lower().startswith("http://") else "https"
+        host = ""
+        findings.append((15, "The link has malformed brackets or host formatting."))
     full_url = candidate.lower()
 
-    if parsed.scheme != "https":
+    if scheme != "https":
         findings.append((15, "The link does not use HTTPS, so its connection may not be protected."))
     if host and _is_ip(host):
         findings.append((30, "The link uses a raw IP address instead of a normal website name."))

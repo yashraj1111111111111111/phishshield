@@ -159,9 +159,12 @@ def augment_benign_url_diversity(
 
     for base_url in sampled_bases:
         cleaned = base_url.rstrip("/")
-        if "://www." in cleaned.lower() and rng.random() < 0.65:
+        if "://www." in cleaned.lower() and rng.random() < 0.70:
             cleaned = cleaned.replace("://www.", "://", 1).replace("://WWW.", "://", 1)
-        path = rng.choice(AUGMENTED_BENIGN_PATHS)
+            # Include both root domains without www and deep-path variants.
+            path = "" if rng.random() < 0.25 else rng.choice(AUGMENTED_BENIGN_PATHS)
+        else:
+            path = rng.choice(AUGMENTED_BENIGN_PATHS)
         candidate = f"{cleaned}{path}"
         if candidate not in seen:
             seen.add(candidate)

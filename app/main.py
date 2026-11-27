@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from app import config
 from app.database.connection import initialize_database
 from app.services.scan_pipeline import run_scan_pipeline
 
@@ -46,9 +47,20 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+def resolve_client_ip(request: Request) -> str:
+    """Resolve client IP, trusting X-Forwarded-For only when TRUST_PROXY_HEADERS=true."""
+    if config.TRUST_PROXY_HEADERS:
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        if forwarded_for:
+            first_hop = forwarded_for.split(",", 1)[0].strip()
+            if first_hop:
+                return first_hop
+    return request.client.host if request.client else "unknown"
+
+
 @app.post("/api/scan", response_model=ScanResponse)
 def create_scan(payload: ScanRequest, request: Request) -> ScanResponse:
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = resolve_client_ip(request)
     outcome = run_scan_pipeline(payload.content, payload.language, client_ip)
     return ScanResponse(
         scan_reference=outcome.scan_reference,

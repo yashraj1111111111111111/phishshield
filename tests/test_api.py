@@ -131,3 +131,53 @@ def test_campaign_detection_flags_repeated_domain_and_similar_messages(client):
         ]
     assert "campaign_domain" in events
     assert "campaign_message" in events
+
+
+def test_proxy_headers_ignored_unless_trusted(client, monkeypatch):
+    test_client, db_path = client
+    monkeypatch.setattr(config, "TRUST_PROXY_HEADERS", False)
+    for i in range(10):
+        res = test_client.post(
+            "/api/scan",
+            json={"content": "https://www.example.com", "language": "en"},
+            headers={"X-Forwarded-For": f"198.51.100.{i + 1}"},
+        )
+        assert res.status_code == 200
+    blocked = test_client.post(
+        "/api/scan",
+        json={"content": "https://www.example.com", "language": "en"},
+        headers={"X-Forwarded-For": "198.51.100.99"},
+    )
+    assert blocked.status_code == 429
+
+    reset_rate_limits()
+    monkeypatch.setattr(config, "TRUST_PROXY_HEADERS", True)
+    for _ in range(10):
+        assert (
+            test_client.post(
+                "/api/scan",
+                json={"content": "https://www.example.com", "language": "en"},
+                headers={"X-Forwarded-For": "198.51.100.10, 10.0.0.1"},
+            ).status_code
+            == 200
+        )
+    # A different client IP behind the trusted proxy should have its own rate-limit window.
+    other_ip = test_client.post(
+        "/api/scan",
+        json={"content": "https://www.example.com", "language": "en"},
+        headers={"X-Forwarded-For": "198.51.100.20"},
+    )
+    assert other_ip.status_code == 200
+
+    # 11th request from 198.51.100.10 should return 429 and hash that IP.
+    blocked_proxy = test_client.post(
+        "/api/scan",
+        json={"content": "https://www.example.com", "language": "en"},
+        headers={"X-Forwarded-For": "198.51.100.10, 10.0.0.1"},
+    )
+    assert blocked_proxy.status_code == 429
+    with sqlite3.connect(db_path) as conn:
+        last_hash = conn.execute(
+            "SELECT client_hash FROM security_events ORDER BY id DESC LIMIT 1"
+        ).fetchone()[0]
+    assert last_hash == hash_client_ip("198.51.100.10")

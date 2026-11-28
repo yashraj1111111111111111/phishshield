@@ -1120,6 +1120,53 @@ export default function PhishShield() {
         </div>
       </section>
 
+      {/* ZERO-CLICK DEFENSE ARSENAL (UNDER PROBLEM SECTION) ──────────────── */}
+      <section className="arsenal-section" aria-labelledby="arsenal-title">
+        <div className="arsenal-header">
+          <div>
+            <span className="step-label">{t.arsenalEyebrow}</span>
+            <h2 id="arsenal-title">{t.arsenalTitleTop}<br/><em>{t.arsenalTitleAccent}</em></h2>
+            <p>{t.arsenalDesc}</p>
+          </div>
+          <div className="arsenal-filters" role="tablist" aria-label="Filter new capabilities">
+            {t.arsenalFilters.map(f => (
+              <button
+                key={f.id}
+                type="button"
+                role="tab"
+                aria-selected={arsenalFilter === f.id}
+                className={`arsenal-filter-btn${arsenalFilter === f.id ? " active" : ""}`}
+                onClick={() => setArsenalFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="arsenal-grid">
+          {t.arsenalCards
+            .filter(card => arsenalFilter === "all" || card.cat === arsenalFilter)
+            .map(card => (
+              <article key={card.id} className={`arsenal-card cat-${card.cat}`}>
+                <div className="arsenal-card-top">
+                  <span className="arsenal-badge">{card.badge}</span>
+                  {(card.scenarioId || card.action) && (
+                    <button
+                      type="button"
+                      className="arsenal-try-btn"
+                      onClick={() => handleArsenalTry(card)}
+                    >
+                      {t.arsenalTryBtn}
+                    </button>
+                  )}
+                </div>
+                <h3>{card.title}</h3>
+                <p>{card.desc}</p>
+              </article>
+            ))}
+        </div>
+      </section>
+
       {/* HOW IT WORKS ────────────────────────────────────────────────────── */}
       <section className="how-section" aria-labelledby="how-title">
         <div className="section-title-block">
@@ -1206,53 +1253,6 @@ export default function PhishShield() {
           {t.faqs.map(item => (
             <article key={item.q}><b>{item.q}</b><p>{item.a}</p></article>
           ))}
-        </div>
-      </section>
-
-      {/* ZERO-CLICK DEFENSE ARSENAL (WHAT'S NEW) ────────────────────────── */}
-      <section className="arsenal-section" aria-labelledby="arsenal-title">
-        <div className="arsenal-header">
-          <div>
-            <span className="step-label">{t.arsenalEyebrow}</span>
-            <h2 id="arsenal-title">{t.arsenalTitleTop}<br/><em>{t.arsenalTitleAccent}</em></h2>
-            <p>{t.arsenalDesc}</p>
-          </div>
-          <div className="arsenal-filters" role="tablist" aria-label="Filter new capabilities">
-            {t.arsenalFilters.map(f => (
-              <button
-                key={f.id}
-                type="button"
-                role="tab"
-                aria-selected={arsenalFilter === f.id}
-                className={`arsenal-filter-btn${arsenalFilter === f.id ? " active" : ""}`}
-                onClick={() => setArsenalFilter(f.id)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="arsenal-grid">
-          {t.arsenalCards
-            .filter(card => arsenalFilter === "all" || card.cat === arsenalFilter)
-            .map(card => (
-              <article key={card.id} className={`arsenal-card cat-${card.cat}`}>
-                <div className="arsenal-card-top">
-                  <span className="arsenal-badge">{card.badge}</span>
-                  {(card.scenarioId || card.action) && (
-                    <button
-                      type="button"
-                      className="arsenal-try-btn"
-                      onClick={() => handleArsenalTry(card)}
-                    >
-                      {t.arsenalTryBtn}
-                    </button>
-                  )}
-                </div>
-                <h3>{card.title}</h3>
-                <p>{card.desc}</p>
-              </article>
-            ))}
         </div>
       </section>
 

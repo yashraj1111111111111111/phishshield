@@ -768,6 +768,12 @@ export default function PhishShield() {
     catch { /* ignore */ }
   }, [theme]);
 
+  useEffect(() => {
+    if (!API_URL || API_URL.includes("127.0.0.1") || API_URL.includes("localhost")) return;
+    const base = String(API_URL).replace(/\/+$/, "");
+    fetch(`${base}/health`, { method: "GET" }).catch(() => {});
+  }, []);
+
   const t            = COPY[language]      || COPY.en;
   const mocks        = MOCKS_BY_LANG[language] || MOCKS_BY_LANG.en;
   const activeResult = result || (preview === "rate" ? null : mocks[preview]);

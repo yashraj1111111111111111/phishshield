@@ -1531,6 +1531,9 @@ body[data-theme="light"] {
   flex-wrap: wrap;
   gap: 6px;
 }
+.story-filters {
+  margin-bottom: 16px;
+}
 .arsenal-filter-btn {
   padding: 6px 12px;
   border-radius: 999px;

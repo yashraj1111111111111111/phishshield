@@ -5,43 +5,18 @@ import "./PhishShield.css";
 const API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
 
 const DEMOS = [
-  { id: "low",   kind: "mint",   value: "https://www.example.com" },
-  { id: "kyc",   kind: "amber",  value: "Your KYC will expire today. Verify now at http://198.51.100.42/login and share your OTP." },
-  { id: "brand", kind: "coral",  value: "https://paypal-verify.example/account/login" },
-  { id: "short", kind: "violet", value: "http://bit.ly/verify-prize-now" },
-];
-
-const SIMULATOR_SCENARIOS = [
-  {
-    id: "digital_arrest",
-    tag: "CBI / Digital Arrest",
-    value: "CBI Cyber Crime notice: Your Aadhaar parcel has been seized for money laundering. Stay on video call for digital arrest or pay fine immediately.",
-  },
-  {
-    id: "trai_sim",
-    tag: "TRAI SIM Cut",
-    value: "TRAI Alert: Your mobile SIM will be disconnected within 2 hours due to illegal activity. Verify KYC at http://trai-kyc-update.xyz/verify",
-  },
-  {
-    id: "electricity_apk",
-    tag: "Electricity + .APK",
-    value: "MSEDCL Alert: Your electricity power will be disconnected tonight. Install official update app http://198.51.100.42/bescom-bill.apk to pay.",
-  },
-  {
-    id: "homograph_sbi",
-    tag: "Homograph SBI",
-    value: "https://s\u044ci-verify.xyz/netbanking/login",
-  },
-  {
-    id: "upi_cashback",
-    tag: "UPI Cashback Trap",
-    value: "Congratulations! Claim your Rs.2,500 Electricity Cashback now: upi://pay?pa=cashback-desk@okaxis&pn=ElectricityRefund&am=2500&tn=Claim%20Cashback%20Refund",
-  },
-  {
-    id: "email_spoof",
-    tag: "Email Spoof (.eml)",
-    value: "From: security@hdfcbank.com\nReply-To: helpdesk@hdfc-verify.xyz\nReturn-Path: bounce@mail-alert.top\nAuthentication-Results: spf=fail dmarc=fail\nUrgent: Update your KYC immediately.",
-  },
+  { id: "low",             kind: "mint",   value: "https://www.example.com" },
+  { id: "kyc",             kind: "amber",  value: "Your KYC will expire today. Verify now at http://198.51.100.42/login and share your OTP." },
+  { id: "brand",           kind: "coral",  value: "https://paypal-verify.example/account/login" },
+  { id: "short",           kind: "violet", value: "http://bit.ly/verify-prize-now" },
+  { id: "digital_arrest",  kind: "coral",  value: "CBI Cyber Crime notice: Your Aadhaar parcel has been seized for money laundering. Stay on video call for digital arrest or pay fine immediately." },
+  { id: "trai_sim",        kind: "amber",  value: "TRAI Alert: Your mobile SIM will be disconnected within 2 hours due to illegal activity. Verify KYC at http://trai-kyc-update.xyz/verify" },
+  { id: "electricity_apk", kind: "coral",  value: "MSEDCL Alert: Your electricity power will be disconnected tonight. Install official update app http://198.51.100.42/bescom-bill.apk to pay." },
+  { id: "remote_access",   kind: "amber",  value: "Urgent bank refund pending. Install AnyDesk and share your 9-digit support code to receive money." },
+  { id: "homograph_sbi",   kind: "violet", value: "https://s\u044ci-verify.xyz/netbanking/login" },
+  { id: "zero_width",      kind: "violet", value: "Enter U\u200bPI PIN to claim reward at http://198.51.100.42:8080/login" },
+  { id: "upi_cashback",    kind: "coral",  value: "Congratulations! Claim your Rs.2,500 Electricity Cashback now: upi://pay?pa=cashback-desk@okaxis&pn=ElectricityRefund&am=2500&tn=Claim%20Cashback%20Refund" },
+  { id: "email_spoof",     kind: "amber",  value: "From: security@hdfcbank.com\nReply-To: helpdesk@hdfc-verify.xyz\nReturn-Path: bounce@mail-alert.top\nAuthentication-Results: spf=fail dmarc=fail\nUrgent: Update your KYC immediately." },
 ];
 
 const MOCKS_BY_LANG = {
@@ -196,7 +171,20 @@ const COPY = {
     neverVisit: "We never visit submitted links",
     demoTitle: "TRY A SAFE DEMO INPUT",
     demoSub: "prefills text only, never opens links",
-    demoLabels: { low: "Low-risk URL", kyc: "KYC + OTP scam", brand: "Brand look-alike", short: "Shortened link" },
+    demoLabels: {
+      low: "Low-risk URL",
+      kyc: "KYC + OTP (Raw IP)",
+      brand: "Brand look-alike",
+      short: "Shortened link",
+      digital_arrest: "Digital Arrest / CBI",
+      trai_sim: "TRAI SIM Cut",
+      electricity_apk: "Electricity + .APK",
+      remote_access: "AnyDesk Screen Share",
+      homograph_sbi: "Homograph / Punycode",
+      zero_width: "Zero-Width Chars",
+      upi_cashback: "UPI Cashback Trap",
+      email_spoof: "Email Spoof (.eml)",
+    },
     rememberLabel: "Remember:",
     rememberTextPre: "'Low Risk' means no strong warning signs were found. It is ",
     rememberNot: "not",
@@ -273,13 +261,19 @@ const COPY = {
     arsenalTitleAccent: "Every layer stays offline-safe.",
     arsenalDesc: "From Cyrillic lookalike links and UPI collect traps to voice dictation and PNG warning cards—explore everything new inside PhishShield.",
     arsenalFilters: [
-      { id: "all", label: "All Upgrades (9)" },
+      { id: "all", label: "All Features (12)" },
       { id: "detect", label: "Detect" },
       { id: "inspect", label: "Inspect" },
       { id: "respond", label: "Respond & Share" },
     ],
-    arsenalTryBtn: "Try live →",
+    arsenalTryBtn: "Try demo →",
     arsenalCards: [
+      {
+        id: "zero_click", cat: "detect", badge: "Zero-Click Engine",
+        title: "URL, SMS & Digital Arrest Scanner",
+        desc: "Detects raw IPs, brand spoofing, shorteners, .apk e-challans, AnyDesk traps & CBI/TRAI threats without opening links.",
+        scenarioId: "kyc",
+      },
       {
         id: "homograph", cat: "detect", badge: "sЬi vs sbi · xn--",
         title: "Homograph & Punycode X-Ray",
@@ -327,6 +321,17 @@ const COPY = {
         title: "De-Fanged Link & Safety Card PNG",
         desc: "Copy neutralized links (hxxp://198[.]51...) or export a local PNG warning card for family WhatsApp groups.",
         scenarioId: "trai_sim",
+      },
+      {
+        id: "sidebar", cat: "inspect", badge: "Quick Check Drawer",
+        title: "Persistent Quick-Test Sidebar",
+        desc: "Test any URL, message, QR, voice, or .eml from anywhere on the page without scrolling down.",
+        action: "sidebar",
+      },
+      {
+        id: "bilingual", cat: "respond", badge: "EN / हिन्दी · Privacy",
+        title: "Bilingual & Salted Privacy Logs",
+        desc: "Plain-language explanations in English & Hindi, Dark/Light themes, and zero raw IPs stored.",
       },
       {
         id: "ext", cat: "respond", badge: "Chrome Guard",
@@ -397,7 +402,20 @@ const COPY = {
     neverVisit: "हम डाले गए लिंक कभी नहीं खोलते",
     demoTitle: "सुरक्षित उदाहरण आज़माएं",
     demoSub: "केवल टेक्स्ट भरता है, लिंक नहीं खोलता",
-    demoLabels: { low: "कम जोखिम URL", kyc: "KYC + OTP ठगी", brand: "नकली ब्रांड लिंक", short: "छोटा किया लिंक" },
+    demoLabels: {
+      low: "कम जोखिम URL",
+      kyc: "KYC + OTP (सीधा IP)",
+      brand: "नकली ब्रांड लिंक",
+      short: "छोटा किया लिंक",
+      digital_arrest: "डिजिटल अरेस्ट / CBI",
+      trai_sim: "TRAI सिम कटौती",
+      electricity_apk: "बिजली बिल + .APK",
+      remote_access: "AnyDesk स्क्रीन शेयर",
+      homograph_sbi: "होमोग्राफ / Punycode",
+      zero_width: "छिपे Zero-Width अक्षर",
+      upi_cashback: "UPI कैशबैक जाल",
+      email_spoof: "ईमेल स्पूफ (.eml)",
+    },
     rememberLabel: "याद रखें:",
     rememberTextPre: "'कम जोखिम' का अर्थ है कि बड़े खतरे के संकेत नहीं मिले। यह लिंक के सुरक्षित होने की गारंटी ",
     rememberNot: "नहीं",
@@ -474,13 +492,19 @@ const COPY = {
     arsenalTitleAccent: "हर जाँच पूरी तरह सुरक्षित।",
     arsenalDesc: "नकली अक्षर वाले लिंक और UPI जाल से लेकर वॉइस डिक्टेशन और PNG चेतावनी कार्ड तक—जानें PhishShield में क्या नया जुड़ा है।",
     arsenalFilters: [
-      { id: "all", label: "सभी फीचर्स (9)" },
+      { id: "all", label: "सभी फीचर्स (12)" },
       { id: "detect", label: "पहचान" },
       { id: "inspect", label: "गहन जाँच" },
       { id: "respond", label: "बचाव व साझा" },
     ],
-    arsenalTryBtn: "लाइव आज़माएं →",
+    arsenalTryBtn: "डेमो आज़माएं →",
     arsenalCards: [
+      {
+        id: "zero_click", cat: "detect", badge: "ज़ीरो-क्लिक इंजन",
+        title: "URL, SMS व डिजिटल अरेस्ट स्कैनर",
+        desc: "बिना लिंक खोले कच्चे IP, नकली ब्रांड, शॉर्टनर, .apk ई-चालान, AnyDesk व CBI/TRAI धमकियों को पकड़ता है।",
+        scenarioId: "kyc",
+      },
       {
         id: "homograph", cat: "detect", badge: "sЬi बनाम sbi · xn--",
         title: "होमोग्राफ व Punycode एक्स-रे",
@@ -528,6 +552,17 @@ const COPY = {
         title: "सुरक्षित कॉपी व PNG सुरक्षा कार्ड",
         desc: "लिंक को सुरक्षित रूप (hxxp://198[.]51...) में कॉपी करें या परिवार के WhatsApp ग्रुप के लिए PNG कार्ड डाउनलोड करें।",
         scenarioId: "trai_sim",
+      },
+      {
+        id: "sidebar", cat: "inspect", badge: "त्वरित जाँच",
+        title: "हमेशा तैयार क्विक-चेक साइडबार",
+        desc: "नीचे स्क्रॉल किए बिना पेज पर कहीं से भी URL, संदेश, QR, वॉइस या .eml तुरंत जाँचें।",
+        action: "sidebar",
+      },
+      {
+        id: "bilingual", cat: "respond", badge: "EN / हिन्दी · गोपनीयता",
+        title: "द्विभाषी व्याख्या व गोपनीय लॉग",
+        desc: "English और हिन्दी में आसान व्याख्या, डार्क/लाइट थीम और कोई कच्चा IP सेव नहीं।",
       },
       {
         id: "ext", cat: "respond", badge: "Chrome सुरक्षा",
@@ -803,6 +838,10 @@ export default function PhishShield() {
       qrInputRef.current?.click();
       return;
     }
+    if (card.action === "sidebar") {
+      setSidebarOpen(true);
+      return;
+    }
     const checkerEl = document.getElementById("checker");
     if (checkerEl) checkerEl.scrollIntoView({ behavior: "smooth", block: "start" });
     if (card.action === "voice") {
@@ -810,7 +849,7 @@ export default function PhishShield() {
       return;
     }
     if (card.scenarioId) {
-      const scenario = SIMULATOR_SCENARIOS.find(s => s.id === card.scenarioId);
+      const scenario = DEMOS.find(s => s.id === card.scenarioId);
       if (scenario) runSimulator(scenario);
     }
   }
@@ -1097,52 +1136,29 @@ export default function PhishShield() {
         </div>
       </section>
 
-      {/* STORY ───────────────────────────────────────────────────────────── */}
+      {/* STORY + ALL FEATURES (RED BOX AREA) ─────────────────────────────── */}
       <section className="story-section" aria-labelledby="why-title">
         <div className="story-intro">
           <span className="step-label">{t.problemEyebrow}</span>
           <h2 id="why-title">{t.problemTitleTop}<br/><em>{t.problemTitleAccent}</em></h2>
           <p>{t.problemDesc}</p>
         </div>
-        <div className="threat-grid">
-          <article className="threat-card">
-            <span className="threat-symbol amber-symbol">!</span>
-            <div><b>{t.threats[0].title}</b><p>{t.threats[0].desc}</p></div>
-          </article>
-          <article className="threat-card">
-            <span className="threat-symbol coral-symbol">↗</span>
-            <div><b>{t.threats[1].title}</b><p>{t.threats[1].desc}</p></div>
-          </article>
-          <article className="threat-card">
-            <span className="threat-symbol violet-symbol">%</span>
-            <div><b>{t.threats[2].title}</b><p>{t.threats[2].desc}</p></div>
-          </article>
-        </div>
-      </section>
 
-      {/* ZERO-CLICK DEFENSE ARSENAL (UNDER PROBLEM SECTION) ──────────────── */}
-      <section className="arsenal-section" aria-labelledby="arsenal-title">
-        <div className="arsenal-header">
-          <div>
-            <span className="step-label">{t.arsenalEyebrow}</span>
-            <h2 id="arsenal-title">{t.arsenalTitleTop}<br/><em>{t.arsenalTitleAccent}</em></h2>
-            <p>{t.arsenalDesc}</p>
-          </div>
-          <div className="arsenal-filters" role="tablist" aria-label="Filter new capabilities">
-            {t.arsenalFilters.map(f => (
-              <button
-                key={f.id}
-                type="button"
-                role="tab"
-                aria-selected={arsenalFilter === f.id}
-                className={`arsenal-filter-btn${arsenalFilter === f.id ? " active" : ""}`}
-                onClick={() => setArsenalFilter(f.id)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+        <div className="arsenal-filters story-filters" role="tablist" aria-label="Filter PhishShield features">
+          {t.arsenalFilters.map(f => (
+            <button
+              key={f.id}
+              type="button"
+              role="tab"
+              aria-selected={arsenalFilter === f.id}
+              className={`arsenal-filter-btn${arsenalFilter === f.id ? " active" : ""}`}
+              onClick={() => setArsenalFilter(f.id)}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
+
         <div className="arsenal-grid">
           {t.arsenalCards
             .filter(card => arsenalFilter === "all" || card.cat === arsenalFilter)
@@ -1328,7 +1344,7 @@ export default function PhishShield() {
             </div>
           </form>
 
-          {/* Demo chips */}
+          {/* Demo chips (all features) */}
           <div className="demo-area">
             <div className="demo-title">
               {t.demoTitle} <span className="demo-title-sep">·</span> <span className="demo-sub">{t.demoSub}</span>
@@ -1342,25 +1358,6 @@ export default function PhishShield() {
                   onClick={() => useDemo(demo)}
                 >
                   {t.demoLabels[demo.id]}<span className="chip-arrow">↗</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Attack Simulator (Judge Presets) */}
-          <div className="simulator-area">
-            <div className="demo-title">
-              {t.simTitle} <span className="demo-title-sep">·</span> <span className="demo-sub">{t.simSub}</span>
-            </div>
-            <div className="sim-chips">
-              {SIMULATOR_SCENARIOS.map(scenario => (
-                <button
-                  type="button"
-                  key={scenario.id}
-                  className={`sim-chip${selectedDemo === scenario.id ? " chip-selected" : ""}`}
-                  onClick={() => runSimulator(scenario)}
-                >
-                  {scenario.tag} <span className="chip-arrow">▶</span>
                 </button>
               ))}
             </div>

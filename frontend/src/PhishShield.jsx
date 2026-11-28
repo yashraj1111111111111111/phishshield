@@ -268,6 +268,72 @@ const COPY = {
     downloadCard: "Safety Card PNG",
     simTitle: "Attack Simulator (Judge Presets)",
     simSub: "1-click realistic scam scenarios",
+    arsenalEyebrow: "WHAT'S NEW · ZERO-CLICK DEFENSE ARSENAL",
+    arsenalTitleTop: "Upgraded for modern scams.",
+    arsenalTitleAccent: "Every layer stays offline-safe.",
+    arsenalDesc: "From Cyrillic lookalike links and UPI collect traps to voice dictation and PNG warning cards—explore everything new inside PhishShield.",
+    arsenalFilters: [
+      { id: "all", label: "All Upgrades (9)" },
+      { id: "detect", label: "Detect" },
+      { id: "inspect", label: "Inspect" },
+      { id: "respond", label: "Respond & Share" },
+    ],
+    arsenalTryBtn: "Try live →",
+    arsenalCards: [
+      {
+        id: "homograph", cat: "detect", badge: "sЬi vs sbi · xn--",
+        title: "Homograph & Punycode X-Ray",
+        desc: "Catches disguised Cyrillic/Greek lookalike domains, xn-- Punycode, and invisible zero-width characters.",
+        scenarioId: "homograph_sbi",
+      },
+      {
+        id: "upi", cat: "inspect", badge: "upi://pay",
+        title: "UPI Intent Deep-Inspector",
+        desc: "Parses payee VPA, name, amount & note offline to expose cashback/refund traps before you open any payment app.",
+        scenarioId: "upi_cashback",
+      },
+      {
+        id: "eml", cat: "inspect", badge: "SPF · DKIM · DMARC",
+        title: "Offline .eml Header Spoof Lab",
+        desc: "Drop any .eml file or paste email headers to spot From vs Reply-To mismatches and failed SPF/DMARC checks.",
+        scenarioId: "email_spoof",
+      },
+      {
+        id: "qr", cat: "inspect", badge: "Zero-Upload QR",
+        title: "Browser-Only QR Image Scanner",
+        desc: "Decodes QR screenshots locally in your browser using BarcodeDetector—zero images ever leave your device.",
+        action: "qr",
+      },
+      {
+        id: "voice", cat: "detect", badge: "en-IN · hi-IN",
+        title: "Voice-to-Text Scam Check",
+        desc: "Dictate suspicious phone-call scripts in English or Hindi—designed so parents and elders never have to type.",
+        action: "voice",
+      },
+      {
+        id: "highlight", cat: "detect", badge: "X-Ray Highlights",
+        title: "Suspicious Phrase Highlighter",
+        desc: "Highlights the exact trigger words (OTP, digital arrest, .apk, raw IP) right inside your pasted message.",
+        scenarioId: "digital_arrest",
+      },
+      {
+        id: "playbook", cat: "respond", badge: "1930 · cybercrime.gov.in",
+        title: "1930 Recovery Playbook",
+        desc: "Gives threat-specific action steps—from Airplane Mode for .apk spyware to India's 1930 cyber fraud helpline.",
+        scenarioId: "electricity_apk",
+      },
+      {
+        id: "card", cat: "respond", badge: "hxxp:// · PNG Card",
+        title: "De-Fanged Link & Safety Card PNG",
+        desc: "Copy neutralized links (hxxp://198[.]51...) or export a local PNG warning card for family WhatsApp groups.",
+        scenarioId: "trai_sim",
+      },
+      {
+        id: "ext", cat: "respond", badge: "Chrome Guard",
+        title: "Live Hover & Paste Guard",
+        desc: "Chrome extension flags deceptive anchor text vs href mismatches on hover and warns when risky text is pasted.",
+      },
+    ],
   },
   hi: {
     tagline: "क्लिक करने से पहले जाँचें।",
@@ -403,6 +469,72 @@ const COPY = {
     downloadCard: "सुरक्षा कार्ड PNG",
     simTitle: "हमला सिम्युलेटर (डेमो)",
     simSub: "1-क्लिक असली जैसे स्कैम उदाहरण",
+    arsenalEyebrow: "नया अपडेट · ज़ीरो-क्लिक सुरक्षा कवच",
+    arsenalTitleTop: "आधुनिक ठगी के लिए तैयार।",
+    arsenalTitleAccent: "हर जाँच पूरी तरह सुरक्षित।",
+    arsenalDesc: "नकली अक्षर वाले लिंक और UPI जाल से लेकर वॉइस डिक्टेशन और PNG चेतावनी कार्ड तक—जानें PhishShield में क्या नया जुड़ा है।",
+    arsenalFilters: [
+      { id: "all", label: "सभी फीचर्स (9)" },
+      { id: "detect", label: "पहचान" },
+      { id: "inspect", label: "गहन जाँच" },
+      { id: "respond", label: "बचाव व साझा" },
+    ],
+    arsenalTryBtn: "लाइव आज़माएं →",
+    arsenalCards: [
+      {
+        id: "homograph", cat: "detect", badge: "sЬi बनाम sbi · xn--",
+        title: "होमोग्राफ व Punycode एक्स-रे",
+        desc: "असली जैसे दिखने वाले गैर-अंग्रेज़ी अक्षर, xn-- डोमेन और छिपे हुए zero-width अक्षरों को तुरंत पकड़ता है।",
+        scenarioId: "homograph_sbi",
+      },
+      {
+        id: "upi", cat: "inspect", badge: "upi://pay",
+        title: "UPI इंटेंट डीप-इंस्पेक्टर",
+        desc: "ऑफ़लाइन ही VPA, नाम, राशि और नोट पढ़कर 'कैशबैक/रिफंड के लिए PIN डालें' जैसी ठगी पकड़ता है।",
+        scenarioId: "upi_cashback",
+      },
+      {
+        id: "eml", cat: "inspect", badge: "SPF · DKIM · DMARC",
+        title: "ऑफ़लाइन .eml ईमेल हेडर जाँच",
+        desc: "कोई भी .eml फ़ाइल या ईमेल हेडर डालें और From बनाम Reply-To स्पूफिंग व SPF/DMARC विफलता देखें।",
+        scenarioId: "email_spoof",
+      },
+      {
+        id: "qr", cat: "inspect", badge: "ऑफ़लाइन QR",
+        title: "ब्राउज़र-ओनली QR इमेज स्कैनर",
+        desc: "बिना किसी सर्वर अपलोड के सीधे आपके ब्राउज़र में QR स्क्रीनशॉट की जाँच करता है।",
+        action: "qr",
+      },
+      {
+        id: "voice", cat: "detect", badge: "en-IN · hi-IN",
+        title: "बोलकर स्कैम जाँच (Voice)",
+        desc: "संदिग्ध कॉल की बात हिंदी या अंग्रेज़ी में बोलकर लिखें—माता-पिता और बुज़ुर्गों के लिए बेहद आसान।",
+        action: "voice",
+      },
+      {
+        id: "highlight", cat: "detect", badge: "हाइलाइटर",
+        title: "संदिग्ध शब्द हाइलाइटर",
+        desc: "आपके संदेश में मौजूद खतरनाक शब्दों (OTP, डिजिटल अरेस्ट, .apk) को सीधे रंगीन हाइलाइट करता है।",
+        scenarioId: "digital_arrest",
+      },
+      {
+        id: "playbook", cat: "respond", badge: "1930 · cybercrime.gov.in",
+        title: "1930 बचाव व रिकवरी प्लेबुक",
+        desc: ".apk के लिए Airplane Mode से लेकर भारत की 1930 साइबर हेल्पलाइन तक सटीक कदम बताता है।",
+        scenarioId: "electricity_apk",
+      },
+      {
+        id: "card", cat: "respond", badge: "hxxp:// · PNG कार्ड",
+        title: "सुरक्षित कॉपी व PNG सुरक्षा कार्ड",
+        desc: "लिंक को सुरक्षित रूप (hxxp://198[.]51...) में कॉपी करें या परिवार के WhatsApp ग्रुप के लिए PNG कार्ड डाउनलोड करें।",
+        scenarioId: "trai_sim",
+      },
+      {
+        id: "ext", cat: "respond", badge: "Chrome सुरक्षा",
+        title: "लाइव होवर और पेस्ट गार्ड",
+        desc: "Chrome एक्सटेंशन माउस ले जाने पर नकली लिंक टेक्स्ट पकड़ता है और संदिग्ध पेस्ट पर तुरंत चेतावनी देता है।",
+      },
+    ],
   },
 };
 
@@ -589,6 +721,7 @@ export default function PhishShield() {
   const [listening, setListening] = useState(false);
   const [selectedDemo, setSelectedDemo] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [arsenalFilter, setArsenalFilter] = useState("all");
   const [scannedText, setScannedText] = useState("");
   const qrInputRef = useRef(null);
   const emlInputRef = useRef(null);
@@ -663,6 +796,23 @@ export default function PhishShield() {
     setSelectedDemo(scenario.id);
     setError(null);
     runScanText(scenario.value);
+  }
+
+  function handleArsenalTry(card) {
+    if (card.action === "qr") {
+      qrInputRef.current?.click();
+      return;
+    }
+    const checkerEl = document.getElementById("checker");
+    if (checkerEl) checkerEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (card.action === "voice") {
+      toggleVoiceInput();
+      return;
+    }
+    if (card.scenarioId) {
+      const scenario = SIMULATOR_SCENARIOS.find(s => s.id === card.scenarioId);
+      if (scenario) runSimulator(scenario);
+    }
   }
 
   function toggleVoiceInput() {
@@ -1056,6 +1206,53 @@ export default function PhishShield() {
           {t.faqs.map(item => (
             <article key={item.q}><b>{item.q}</b><p>{item.a}</p></article>
           ))}
+        </div>
+      </section>
+
+      {/* ZERO-CLICK DEFENSE ARSENAL (WHAT'S NEW) ────────────────────────── */}
+      <section className="arsenal-section" aria-labelledby="arsenal-title">
+        <div className="arsenal-header">
+          <div>
+            <span className="step-label">{t.arsenalEyebrow}</span>
+            <h2 id="arsenal-title">{t.arsenalTitleTop}<br/><em>{t.arsenalTitleAccent}</em></h2>
+            <p>{t.arsenalDesc}</p>
+          </div>
+          <div className="arsenal-filters" role="tablist" aria-label="Filter new capabilities">
+            {t.arsenalFilters.map(f => (
+              <button
+                key={f.id}
+                type="button"
+                role="tab"
+                aria-selected={arsenalFilter === f.id}
+                className={`arsenal-filter-btn${arsenalFilter === f.id ? " active" : ""}`}
+                onClick={() => setArsenalFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="arsenal-grid">
+          {t.arsenalCards
+            .filter(card => arsenalFilter === "all" || card.cat === arsenalFilter)
+            .map(card => (
+              <article key={card.id} className={`arsenal-card cat-${card.cat}`}>
+                <div className="arsenal-card-top">
+                  <span className="arsenal-badge">{card.badge}</span>
+                  {(card.scenarioId || card.action) && (
+                    <button
+                      type="button"
+                      className="arsenal-try-btn"
+                      onClick={() => handleArsenalTry(card)}
+                    >
+                      {t.arsenalTryBtn}
+                    </button>
+                  )}
+                </div>
+                <h3>{card.title}</h3>
+                <p>{card.desc}</p>
+              </article>
+            ))}
         </div>
       </section>
 

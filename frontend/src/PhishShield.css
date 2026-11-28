@@ -1496,3 +1496,140 @@ body[data-theme="light"] {
 .ps-app[data-theme="light"] .simulator-area { background: #f6f3ff; border-color: rgba(168, 85, 247, 0.3); }
 .ps-app[data-theme="light"] .sim-chip { background: #efe8ff; color: #5b21b6; }
 .ps-app[data-theme="light"] .sub-inspector-box { background: #f8fbff; border-color: rgba(15, 34, 54, 0.12); }
+
+/* ── Zero-Click Defense Arsenal (What's New) ───────────────────────────── */
+.arsenal-section {
+  padding: 26px 0 42px;
+}
+.arsenal-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.arsenal-header h2 {
+  font-size: 26px;
+  margin: 6px 0 8px;
+}
+.arsenal-header h2 em {
+  font-style: normal;
+  background: linear-gradient(95deg, var(--teal), #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.arsenal-header p {
+  max-width: 560px;
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--text2);
+  margin: 0;
+}
+.arsenal-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.arsenal-filter-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text2);
+  font-size: 10.5px;
+  font-weight: 600;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.arsenal-filter-btn:hover { border-color: rgba(24, 217, 210, 0.4); color: var(--text); }
+.arsenal-filter-btn.active {
+  border-color: var(--teal);
+  background: rgba(24, 217, 210, 0.12);
+  color: var(--teal);
+}
+.arsenal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.arsenal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 18px;
+  border-radius: 13px;
+  background: linear-gradient(155deg, rgba(14, 34, 58, 0.85), rgba(8, 20, 38, 0.92));
+  border: 1px solid var(--line);
+  transition: transform .18s, border-color .2s, box-shadow .2s;
+}
+.arsenal-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(24, 217, 210, 0.35);
+  box-shadow: 0 10px 26px rgba(4, 12, 24, 0.35);
+}
+.arsenal-card.cat-inspect:hover { border-color: rgba(168, 85, 247, 0.45); }
+.arsenal-card.cat-respond:hover { border-color: rgba(255, 206, 119, 0.45); }
+.arsenal-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 11px;
+}
+.arsenal-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(24, 217, 210, 0.11);
+  color: var(--teal);
+  border: 1px solid rgba(24, 217, 210, 0.24);
+}
+.arsenal-card.cat-inspect .arsenal-badge {
+  background: rgba(168, 85, 247, 0.12);
+  color: #d8b4fe;
+  border-color: rgba(168, 85, 247, 0.28);
+}
+.arsenal-card.cat-respond .arsenal-badge {
+  background: rgba(255, 206, 119, 0.12);
+  color: var(--amber);
+  border-color: rgba(255, 206, 119, 0.28);
+}
+.arsenal-try-btn {
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+.arsenal-try-btn:hover { border-color: var(--teal); color: var(--teal); }
+.arsenal-card h3 {
+  font: 700 12.5px Manrope;
+  color: #e9f2f8;
+  margin: 0 0 6px;
+}
+.arsenal-card p {
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--text2);
+  margin: 0;
+}
+.ps-app[data-theme="light"] .arsenal-card {
+  background: linear-gradient(155deg, #ffffff, #f2f7fc);
+  border-color: rgba(15, 34, 54, 0.12);
+}
+.ps-app[data-theme="light"] .arsenal-card h3 { color: #0d1f30; }
+.ps-app[data-theme="light"] .arsenal-badge { color: #0c8a72; border-color: rgba(12, 138, 114, 0.28); }
+.ps-app[data-theme="light"] .arsenal-card.cat-inspect .arsenal-badge { color: #6d28d9; border-color: rgba(109, 40, 217, 0.28); }
+.ps-app[data-theme="light"] .arsenal-card.cat-respond .arsenal-badge { color: #9a5d00; border-color: rgba(154, 93, 0, 0.28); }
+.ps-app[data-theme="light"] .arsenal-try-btn { border-color: rgba(15, 34, 54, 0.16); background: #ffffff; }
+@media (max-width: 900px) {
+  .arsenal-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .arsenal-grid { grid-template-columns: 1fr; }
+}

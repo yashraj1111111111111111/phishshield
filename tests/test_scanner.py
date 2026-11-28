@@ -162,3 +162,33 @@ def test_zero_width_obfuscation_and_defanged_url_and_matched_terms():
     assert "msg_zero_width_obfuscation" in rule_ids
     assert zws.technical_details["defanged_url"] == "hxxp://198[.]51[.]100[.]42:8080/login"
     assert "198.51.100.42" in zws.matched_terms
+
+
+def test_upi_intent_deep_inspector():
+    upi = scan("upi://pay?pa=cashback-desk@okaxis&pn=ElectricityRefund&am=2500&tn=Claim%20Cashback%20Refund")
+    td = upi.technical_details
+    assert td["upi_details"]["pa"] == "cashback-desk@okaxis"
+    assert td["upi_details"]["am"] == "2500"
+    rule_ids = {r["rule_id"] for r in td["triggered_rules"]}
+    assert {"upi_collect_trap", "upi_vpa_mismatch"}.issubset(rule_ids)
+    assert upi.score >= 60
+    assert upi.level == "Dangerous"
+
+
+def test_email_header_spoof_analyzer():
+    eml = (
+        "From: security@hdfcbank.com\n"
+        "Reply-To: helpdesk@hdfc-verify.xyz\n"
+        "Return-Path: bounce@mail-alert.top\n"
+        "Authentication-Results: spf=fail dmarc=fail\n"
+        "Urgent: Update your KYC immediately."
+    )
+    res = scan(eml)
+    eh = res.technical_details["email_headers"]
+    assert eh["from_domain"] == "hdfcbank.com"
+    assert eh["reply_to_domain"] == "hdfc-verify.xyz"
+    assert eh["return_path_domain"] == "mail-alert.top"
+    assert "SPF=fail" in eh["auth_failures"]
+    rule_ids = {r["rule_id"] for r in res.technical_details["triggered_rules"]}
+    assert {"email_reply_to_mismatch", "email_return_path_mismatch", "email_auth_fail"}.issubset(rule_ids)
+    assert res.level == "Dangerous"

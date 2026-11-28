@@ -1111,6 +1111,16 @@ with col_result:
                 rules = td.get("triggered_rules") or []
                 st.markdown("**Detected URL indicators:** " + (", ".join(url_inds) if url_inds else "None"))
                 st.markdown("**Detected message indicators:** " + (", ".join(msg_inds) if msg_inds else "None"))
+                upi_details = td.get("upi_details")
+                if upi_details:
+                    st.markdown(
+                        f"**UPI Intent:** `pa={upi_details.get('pa')}` · `pn={upi_details.get('pn')}` · `am={upi_details.get('am')}` · `tn={upi_details.get('tn')}`"
+                    )
+                email_headers = td.get("email_headers")
+                if email_headers:
+                    st.markdown(
+                        f"**Email Headers:** `From={email_headers.get('from_domain')}` · `Reply-To={email_headers.get('reply_to_domain')}` · `Auth Fails={email_headers.get('auth_failures') or 'None'}`"
+                    )
                 if rules:
                     st.markdown("**Triggered rule IDs & score contributions:**")
                     for r in rules:

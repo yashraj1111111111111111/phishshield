@@ -3,7 +3,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 SUSPICIOUS_WORDS = {
     "verify",
@@ -96,6 +96,21 @@ MESSAGE_SCAM_RULES: list[tuple[str, int, re.Pattern[str], str]] = [
 _URGENCY_RE = re.compile(r"\b(today|immediately|within \d+ hours?|last chance)\b", flags=re.IGNORECASE)
 _SENSITIVE_INFO_RE = re.compile(r"\b(otp|cvv|pin|password)\b", flags=re.IGNORECASE)
 _ZERO_WIDTH_RE = re.compile(r"[\u200b\u200c\u200d\u2060\ufeff]")
+_UPI_URI_RE = re.compile(r"upi://pay\?[^\s]+", flags=re.IGNORECASE)
+_UPI_TRAP_WORDS_RE = re.compile(
+    r"\b(refund|cashback|prize|lottery|reward|claim|winner|receive|reversal)\b",
+    flags=re.IGNORECASE,
+)
+_UPI_OFFICIAL_CLAIM_RE = re.compile(
+    r"(?:\b(?:sbi|hdfc|icici|axis|paytm|phonepe|gpay|kyc|govt|irctc|tax)\b|electricity|bescom|msedcl|challan)",
+    flags=re.IGNORECASE,
+)
+_EMAIL_HEADER_LINE_RE = re.compile(
+    r"^(From|Reply-To|Return-Path|Authentication-Results|Received-SPF):\s*(.+)$",
+    flags=re.IGNORECASE | re.MULTILINE,
+)
+_EMAIL_DOMAIN_RE = re.compile(r"@([a-z0-9.-]+\.[a-z]{2,})", flags=re.IGNORECASE)
+_EMAIL_AUTH_FAIL_RE = re.compile(r"\b(spf|dkim|dmarc)\s*=\s*(fail|softfail)\b", flags=re.IGNORECASE)
 _BARE_DOMAIN_TLDS = "|".join(tld.lstrip(".") for tld in ABUSED_TLDS) + "|com|in|org|net|co\\.in"
 _MESSAGE_URL_RE = re.compile(
     rf"(?:(?:https?://|www\.)[^\s]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:{_BARE_DOMAIN_TLDS})(?:/[^\s]*)?)",
@@ -295,10 +310,132 @@ def _url_findings(url: str) -> tuple[list[tuple[str, str, int, str]], dict[str, 
     return findings, facts, matched
 
 
-def _message_findings(message: str) -> tuple[list[tuple[str, str, int, str]], dict[str, Any] | None, list[str]]:
+def _inspect_upi_intent(uri: str, full_text: str) -> tuple[list[tuple[str, str, int, str]], dict[str, str], list[str]]:
+    """Parse a upi://pay?... URI offline and flag cashback/collect traps or VPA mismatches."""
+    parsed = urlparse(uri)
+    params = parse_qs(parsed.query)
+    pa = (params.get("pa") or [""])[0].strip()
+    pn = (params.get("pn") or [""])[0].strip()
+    am = (params.get("am") or [""])[0].strip()
+    tn = (params.get("tn") or [""])[0].strip()
+    details = {"pa": pa or "Not specified", "pn": pn or "Not specified", "am": am or "Not specified", "tn": tn or "Not specified"}
+    findings: list[tuple[str, str, int, str]] = []
+    matched: list[str] = [uri]
+
+    combined_note = f"{tn} {pn} {full_text}".strip()
+    trap_hits = _UPI_TRAP_WORDS_RE.findall(combined_note)
+    if trap_hits:
+        findings.append(
+            (
+                "upi_collect_trap",
+                "message",
+                35,
+                "UPI payment link asks for payment while claiming a refund, cashback, or prize—UPI links always debit your account.",
+            )
+        )
+        matched.extend(trap_hits)
+
+    claim_hits = _UPI_OFFICIAL_CLAIM_RE.findall(f"{tn} {pn}")
+    if pa and "@" in pa:
+        local_part = pa.split("@", 1)[0].lower()
+        if claim_hits and not any(c.lower() in local_part for c in claim_hits):
+            findings.append(
+                (
+                    "upi_vpa_mismatch",
+                    "message",
+                    25,
+                    "UPI payee address (VPA) does not match an official organization or claimed purpose.",
+                )
+            )
+            matched.append(pa)
+    elif pa:
+        findings.append(
+            (
+                "upi_vpa_mismatch",
+                "message",
+                25,
+                "UPI payee address (VPA) does not match an official organization or claimed purpose.",
+            )
+        )
+        matched.append(pa)
+
+    return findings, details, matched
+
+
+def _inspect_email_headers(message: str) -> tuple[list[tuple[str, str, int, str]], dict[str, Any] | None, list[str]]:
+    """Analyze pasted email/.eml headers offline for From/Reply-To/Return-Path spoofing and SPF/DKIM/DMARC fails."""
+    header_matches = _EMAIL_HEADER_LINE_RE.findall(message)
+    if len(header_matches) < 2:
+        return [], None, []
+
+    headers: dict[str, str] = {}
+    for name, val in header_matches:
+        key = name.lower()
+        headers[key] = f"{headers.get(key, '')} {val}".strip()
+
+    def _first_domain(header_val: str) -> str:
+        m = _EMAIL_DOMAIN_RE.search(header_val or "")
+        return m.group(1).lower() if m else ""
+
+    from_domain = _first_domain(headers.get("from", ""))
+    reply_domain = _first_domain(headers.get("reply-to", ""))
+    return_domain = _first_domain(headers.get("return-path", ""))
+    auth_text = f"{headers.get('authentication-results', '')} {headers.get('received-spf', '')}"
+    auth_fails = [f"{proto.upper()}={status.lower()}" for proto, status in _EMAIL_AUTH_FAIL_RE.findall(auth_text)]
+
+    findings: list[tuple[str, str, int, str]] = []
+    matched: list[str] = []
+
+    if from_domain and reply_domain and from_domain != reply_domain:
+        findings.append(
+            (
+                "email_reply_to_mismatch",
+                "message",
+                30,
+                f"Email From ({from_domain}) and Reply-To ({reply_domain}) domains do not match, a common email spoofing tactic.",
+            )
+        )
+        matched.extend([from_domain, reply_domain])
+
+    if from_domain and return_domain and from_domain != return_domain:
+        findings.append(
+            (
+                "email_return_path_mismatch",
+                "message",
+                20,
+                f"Email From ({from_domain}) and Return-Path ({return_domain}) domains differ, indicating the sender may be spoofed.",
+            )
+        )
+        matched.append(return_domain)
+
+    if auth_fails:
+        findings.append(
+            (
+                "email_auth_fail",
+                "message",
+                35,
+                f"Email authentication headers (SPF/DKIM/DMARC) show verification failure ({', '.join(auth_fails)}).",
+            )
+        )
+        matched.extend(auth_fails)
+
+    email_info = {
+        "from_domain": from_domain or "Not specified",
+        "reply_to_domain": reply_domain or "Not specified",
+        "return_path_domain": return_domain or "Not specified",
+        "auth_failures": auth_fails,
+    }
+    return findings, email_info, matched
+
+
+def _message_findings(
+    message: str,
+) -> tuple[list[tuple[str, str, int, str]], dict[str, Any] | None, list[str], dict[str, str] | None, dict[str, Any] | None]:
     lowered = message.lower()
     findings: list[tuple[str, str, int, str]] = []
     matched: list[str] = []
+    upi_details: dict[str, str] | None = None
+    email_headers: dict[str, Any] | None = None
 
     if _ZERO_WIDTH_RE.search(message):
         findings.append(
@@ -342,6 +479,18 @@ def _message_findings(message: str) -> tuple[list[tuple[str, str, int, str]], di
             findings.append((f"msg_{category}", "message", weight, reason))
             matched.extend(category_hits)
 
+    upi_uris = _UPI_URI_RE.findall(message)
+    for idx, upi_uri in enumerate(upi_uris):
+        u_findings, u_details, u_matched = _inspect_upi_intent(upi_uri, message)
+        if idx == 0:
+            upi_details = u_details
+        findings.extend(u_findings)
+        matched.extend(u_matched)
+
+    e_findings, email_headers, e_matched = _inspect_email_headers(message)
+    findings.extend(e_findings)
+    matched.extend(e_matched)
+
     urls = _extract_message_urls(message)
     primary_url_facts: dict[str, Any] | None = None
     for idx, url in enumerate(urls):
@@ -353,7 +502,7 @@ def _message_findings(message: str) -> tuple[list[tuple[str, str, int, str]], di
         matched.append(url)
 
     has_threat = has_urgency or ("digital_arrest" in matched_categories)
-    has_action = has_sensitive or bool(urls) or bool(matched_categories & {"upi_qr", "apk_challan", "remote_access"})
+    has_action = has_sensitive or bool(urls) or bool(upi_uris) or bool(matched_categories & {"upi_qr", "apk_challan", "remote_access"})
     if has_threat and has_action:
         findings.append(
             (
@@ -363,12 +512,14 @@ def _message_findings(message: str) -> tuple[list[tuple[str, str, int, str]], di
                 "Combines urgent pressure or legal threats with a request for sensitive action (OTP, PIN, app install, or link).",
             )
         )
-    return findings, primary_url_facts, matched
+    return findings, primary_url_facts, matched, upi_details, email_headers
 
 
 def _build_technical_details(
     findings: list[tuple[str, str, int, str]],
     url_facts: dict[str, Any] | None,
+    upi_details: dict[str, str] | None = None,
+    email_headers: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build structured text-only technical details from parsed URL facts and triggered rules."""
     url_indicators = [reason for _, cat, _, reason in findings if cat == "url"]
@@ -387,6 +538,8 @@ def _build_technical_details(
         "url_length": url_facts["url_length"] if url_facts else None,
         "subdomain_count": url_facts["subdomain_count"] if url_facts else None,
         "defanged_url": url_facts["defanged_url"] if url_facts else None,
+        "upi_details": upi_details,
+        "email_headers": email_headers,
         "detected_url_indicators": url_indicators,
         "detected_message_indicators": message_indicators,
         "triggered_rules": triggered_rules,
@@ -395,11 +548,17 @@ def _build_technical_details(
 
 def scan(content: str) -> ScanResult:
     content = content.strip()
-    looks_like_url = bool(re.fullmatch(r"(?:https?://)?[^\s/]+(?:/[^\s]*)?", content)) and " " not in content
+    looks_like_url = (
+        bool(re.fullmatch(r"(?:https?://)?[^\s/]+(?:/[^\s]*)?", content))
+        and " " not in content
+        and not content.lower().startswith("upi://")
+    )
+    upi_details: dict[str, str] | None = None
+    email_headers: dict[str, Any] | None = None
     if looks_like_url:
         findings, url_facts, raw_matched = _url_findings(content)
     else:
-        findings, url_facts, raw_matched = _message_findings(content)
+        findings, url_facts, raw_matched, upi_details, email_headers = _message_findings(content)
 
     score = min(100, sum(weight for _, _, weight, _ in findings))
     if score >= 60:
@@ -419,7 +578,7 @@ def scan(content: str) -> ScanResult:
             seen_lower.add(low)
             deduped_terms.append(term)
 
-    technical_details = _build_technical_details(findings, url_facts)
+    technical_details = _build_technical_details(findings, url_facts, upi_details=upi_details, email_headers=email_headers)
     return ScanResult(
         score=score,
         level=level,

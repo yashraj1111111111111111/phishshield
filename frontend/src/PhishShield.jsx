@@ -11,6 +11,39 @@ const DEMOS = [
   { id: "short", kind: "violet", value: "http://bit.ly/verify-prize-now" },
 ];
 
+const SIMULATOR_SCENARIOS = [
+  {
+    id: "digital_arrest",
+    tag: "CBI / Digital Arrest",
+    value: "CBI Cyber Crime notice: Your Aadhaar parcel has been seized for money laundering. Stay on video call for digital arrest or pay fine immediately.",
+  },
+  {
+    id: "trai_sim",
+    tag: "TRAI SIM Cut",
+    value: "TRAI Alert: Your mobile SIM will be disconnected within 2 hours due to illegal activity. Verify KYC at http://trai-kyc-update.xyz/verify",
+  },
+  {
+    id: "electricity_apk",
+    tag: "Electricity + .APK",
+    value: "MSEDCL Alert: Your electricity power will be disconnected tonight. Install official update app http://198.51.100.42/bescom-bill.apk to pay.",
+  },
+  {
+    id: "homograph_sbi",
+    tag: "Homograph SBI",
+    value: "https://s\u044ci-verify.xyz/netbanking/login",
+  },
+  {
+    id: "upi_cashback",
+    tag: "UPI Cashback Trap",
+    value: "Congratulations! Claim your Rs.2,500 Electricity Cashback now: upi://pay?pa=cashback-desk@okaxis&pn=ElectricityRefund&am=2500&tn=Claim%20Cashback%20Refund",
+  },
+  {
+    id: "email_spoof",
+    tag: "Email Spoof (.eml)",
+    value: "From: security@hdfcbank.com\nReply-To: helpdesk@hdfc-verify.xyz\nReturn-Path: bounce@mail-alert.top\nAuthentication-Results: spf=fail dmarc=fail\nUrgent: Update your KYC immediately.",
+  },
+];
+
 const MOCKS_BY_LANG = {
   en: {
     low: {
@@ -225,6 +258,16 @@ const COPY = {
     playbookTitle: "What to do next",
     copyDefanged: "Copy de-fanged",
     copiedDefanged: "Copied safe",
+    voiceBtn: "Voice",
+    voiceListening: "Listening…",
+    voiceNoSupport: "Voice input is not supported in this browser. Try Chrome or Edge, or paste the text directly.",
+    emlBtn: "Upload .eml",
+    emlError: "Could not read that email file. Please upload a .eml or .txt file.",
+    shareWarning: "Share warning",
+    sharedWarning: "Warning copied",
+    downloadCard: "Safety Card PNG",
+    simTitle: "Attack Simulator (Judge Presets)",
+    simSub: "1-click realistic scam scenarios",
   },
   hi: {
     tagline: "क्लिक करने से पहले जाँचें।",
@@ -350,6 +393,16 @@ const COPY = {
     playbookTitle: "आगे क्या करें (सुरक्षा कदम)",
     copyDefanged: "सुरक्षित कॉपी",
     copiedDefanged: "कॉपी हो गया",
+    voiceBtn: "बोलकर लिखें",
+    voiceListening: "सुन रहा है…",
+    voiceNoSupport: "इस ब्राउज़र में वॉइस इनपुट उपलब्ध नहीं है। कृपया Chrome/Edge आज़माएं या टेक्स्ट पेस्ट करें।",
+    emlBtn: ".eml फ़ाइल",
+    emlError: "ईमेल फ़ाइल पढ़ी नहीं जा सकी। कृपया .eml या .txt फ़ाइल चुनें।",
+    shareWarning: "चेतावनी साझा करें",
+    sharedWarning: "चेतावनी कॉपी हुई",
+    downloadCard: "सुरक्षा कार्ड PNG",
+    simTitle: "हमला सिम्युलेटर (डेमो)",
+    simSub: "1-क्लिक असली जैसे स्कैम उदाहरण",
   },
 };
 
@@ -367,6 +420,9 @@ function Icon({ name, size = 18 }) {
     close:   <><path d="m18 6-12 12M6 6l12 12"/></>,
     eye:     <><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></>,
     check:   <><polyline points="20 6 9 17 4 12"/></>,
+    mic:     <><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8"/></>,
+    file:    <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>,
+    share:   <><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></>,
   };
   return <svg {...p}>{paths[name] || paths.shield}</svg>;
 }
@@ -496,10 +552,15 @@ function getPlaybookSteps(result, lang) {
       ? "कोई .APK या रिमोट-एक्सेस ऐप (AnyDesk/TeamViewer) इंस्टॉल न करें। यदि पहले से इंस्टॉल है तो तुरंत Airplane Mode चालू करें और ऐप हटाएं।"
       : "Do not install any .APK or remote-access app (AnyDesk/TeamViewer). If already installed, turn on Airplane Mode immediately and uninstall it.");
   }
-  if (ruleIds.has("msg_upi_qr") || ruleIds.has("msg_sensitive_info")) {
+  if (ruleIds.has("msg_upi_qr") || ruleIds.has("msg_sensitive_info") || ruleIds.has("upi_collect_trap") || ruleIds.has("upi_vpa_mismatch")) {
     steps.push(isHi
       ? "पैसे पाने के लिए कभी UPI PIN या QR कोड स्कैन की ज़रूरत नहीं होती। यदि पैसे कट गए हैं तो तुरंत 1930 पर कॉल करें या cybercrime.gov.in पर रिपोर्ट करें।"
       : "You never need to enter a UPI PIN or scan a QR code to receive money. If money was debited, call 1930 immediately or report at cybercrime.gov.in.");
+  }
+  if (ruleIds.has("email_reply_to_mismatch") || ruleIds.has("email_return_path_mismatch") || ruleIds.has("email_auth_fail")) {
+    steps.push(isHi
+      ? "इस ईमेल का जवाब न दें और कोई अटैचमेंट न खोलें। सीधे बैंक या कंपनी की आधिकारिक वेबसाइट पर जाकर पुष्टि करें।"
+      : "Do not reply to this email or open attachments. Verify directly via the organisation's official website or support portal.");
   }
   if (!steps.length) {
     steps.push(isHi
@@ -524,10 +585,14 @@ export default function PhishShield() {
   const [preview,  setPreview]  = useState("dangerous");
   const [copied,   setCopied]   = useState(false);
   const [copiedDefanged, setCopiedDefanged] = useState(false);
+  const [sharedWarning, setSharedWarning] = useState(false);
+  const [listening, setListening] = useState(false);
   const [selectedDemo, setSelectedDemo] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [scannedText, setScannedText] = useState("");
   const qrInputRef = useRef(null);
+  const emlInputRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
@@ -562,17 +627,15 @@ export default function PhishShield() {
     setError(value === "rate" ? { type: "rate", message: t.rateError } : null);
   }
 
-  async function handleScan(event) {
-    event?.preventDefault();
-    if (content.trim().length < 3 || loading) return;
+  async function runScanText(rawText) {
+    const trimmed = String(rawText || "").trim();
+    if (trimmed.length < 3 || loading) return;
     setLoading(true);
     setError(null);
     setResult(null);
-    setSelectedDemo(null);
     try {
       // Submitted text is sent only to the configured analysis API. This app never
       // opens, fetches, previews, or executes a URL found in the submitted content.
-      const trimmed = content.trim();
       const data = normalizeResult(await submitScan({ content: trimmed, language, apiUrl: API_URL }));
       setScannedText(trimmed);
       setResult(data);
@@ -587,6 +650,155 @@ export default function PhishShield() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleScan(event) {
+    event?.preventDefault();
+    setSelectedDemo(null);
+    await runScanText(content);
+  }
+
+  function runSimulator(scenario) {
+    setContent(scenario.value);
+    setSelectedDemo(scenario.id);
+    setError(null);
+    runScanText(scenario.value);
+  }
+
+  function toggleVoiceInput() {
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      setError({ type: "offline", message: t.voiceNoSupport });
+      return;
+    }
+    try {
+      const rec = new SpeechRec();
+      rec.lang = language === "hi" ? "hi-IN" : "en-IN";
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = (evt) => {
+        const transcript = evt.results?.[0]?.[0]?.transcript?.trim();
+        if (transcript) {
+          setContent(prev => (prev ? `${prev.trim()} ${transcript}` : transcript).slice(0, 5000));
+        }
+      };
+      rec.onerror = () => setListening(false);
+      rec.onend = () => setListening(false);
+      recognitionRef.current = rec;
+      setListening(true);
+      setError(null);
+      rec.start();
+    } catch {
+      setListening(false);
+      setError({ type: "offline", message: t.voiceNoSupport });
+    }
+  }
+
+  async function handleEmlFileChange(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const raw = await file.text();
+      const trimmed = raw.trim().slice(0, 5000);
+      if (!trimmed) {
+        setError({ type: "offline", message: t.emlError });
+        return;
+      }
+      setContent(trimmed);
+      setSelectedDemo(null);
+      setError(null);
+    } catch {
+      setError({ type: "offline", message: t.emlError });
+    }
+  }
+
+  async function handleTextDrop(event) {
+    const file = event.dataTransfer?.files?.[0];
+    if (!file) return;
+    if (/\.(eml|txt)$/i.test(file.name) || file.type === "text/plain" || file.type === "message/rfc822") {
+      event.preventDefault();
+      try {
+        const raw = await file.text();
+        if (raw.trim()) {
+          setContent(raw.trim().slice(0, 5000));
+          setSelectedDemo(null);
+          setError(null);
+        }
+      } catch {
+        setError({ type: "offline", message: t.emlError });
+      }
+    }
+  }
+
+  async function copyWarningSummary() {
+    if (!activeResult || !tier) return;
+    const defanged = activeResult.technical_details?.defanged_url;
+    const topReasons = (activeResult.reasons || []).slice(0, 2).map(r => `• ${r}`).join("\n");
+    const summary = [
+      `🛡️ PhishShield Alert — ${tier.label} (${activeResult.risk_score}/100)`,
+      defanged ? `Safe Link: ${defanged}` : null,
+      topReasons || null,
+      "Do NOT click links, share OTP/PIN, or install .APK files.",
+      "Report fraud: Call 1930 or visit cybercrime.gov.in",
+    ].filter(Boolean).join("\n");
+    try {
+      await navigator.clipboard.writeText(summary);
+      setSharedWarning(true);
+      window.setTimeout(() => setSharedWarning(false), 1800);
+    } catch {
+      setError({ type: "offline", message: t.copyError });
+    }
+  }
+
+  function downloadSafetyCardPng() {
+    if (!activeResult || !tier) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 440;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#081424";
+    ctx.fillRect(0, 0, 800, 440);
+    ctx.strokeStyle = activeResult.risk_score >= 60 ? "#ff6b6b" : activeResult.risk_score >= 25 ? "#ffce77" : "#18d9d2";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(18, 18, 764, 404);
+
+    ctx.fillStyle = "#18d9d2";
+    ctx.font = "bold 22px system-ui, -apple-system, sans-serif";
+    ctx.fillText("PHISHSHIELD SAFETY CARD", 44, 62);
+
+    ctx.fillStyle = activeResult.risk_score >= 60 ? "#ff8b89" : activeResult.risk_score >= 25 ? "#ffce77" : "#6ce5c4";
+    ctx.font = "bold 30px system-ui, -apple-system, sans-serif";
+    ctx.fillText(`${tier.label} — ${activeResult.risk_score}/100`, 44, 110);
+
+    ctx.fillStyle = "#dbe7f3";
+    ctx.font = "17px system-ui, -apple-system, sans-serif";
+    const lines = [
+      ...(activeResult.reasons || []).slice(0, 2).map(r => `• ${r.slice(0, 82)}`),
+      activeResult.technical_details?.defanged_url ? `De-fanged link: ${activeResult.technical_details.defanged_url.slice(0, 68)}` : "",
+    ].filter(Boolean);
+    lines.forEach((line, idx) => ctx.fillText(line, 44, 165 + idx * 36));
+
+    ctx.fillStyle = "#0f2238";
+    ctx.fillRect(44, 305, 712, 82);
+    ctx.fillStyle = "#ffce77";
+    ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
+    ctx.fillText("WHAT TO DO NEXT: Never share OTP/UPI PIN or install .APK files.", 62, 338);
+    ctx.fillStyle = "#9ec0d8";
+    ctx.font = "16px system-ui, -apple-system, sans-serif";
+    ctx.fillText("Cyber Fraud Helpline: Call 1930  |  cybercrime.gov.in  |  Ref: " + activeResult.scan_reference, 62, 368);
+
+    const link = document.createElement("a");
+    link.download = `phishshield-${activeResult.scan_reference}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
   }
 
   async function copyReference() {
@@ -868,6 +1080,7 @@ export default function PhishShield() {
               maxLength={5000}
               value={content}
               onChange={e => setContent(e.target.value)}
+              onDrop={handleTextDrop}
               placeholder={t.placeholder}
             />
             <div className="input-footer">
@@ -880,6 +1093,23 @@ export default function PhishShield() {
                   className="sr-only"
                   onChange={handleQrFileChange}
                 />
+                <input
+                  ref={emlInputRef}
+                  type="file"
+                  accept=".eml,.txt,message/rfc822,text/plain"
+                  className="sr-only"
+                  onChange={handleEmlFileChange}
+                />
+                <button
+                  type="button"
+                  className={`qr-scan-btn${listening ? " listening" : ""}`}
+                  onClick={toggleVoiceInput}
+                >
+                  <Icon name="mic" size={13}/> {listening ? t.voiceListening : t.voiceBtn}
+                </button>
+                <button type="button" className="qr-scan-btn" onClick={() => emlInputRef.current?.click()}>
+                  <Icon name="file" size={13}/> {t.emlBtn}
+                </button>
                 <button type="button" className="qr-scan-btn" onClick={() => qrInputRef.current?.click()}>
                   <Icon name="eye" size={13}/> {t.scanQrBtn}
                 </button>
@@ -915,6 +1145,25 @@ export default function PhishShield() {
                   onClick={() => useDemo(demo)}
                 >
                   {t.demoLabels[demo.id]}<span className="chip-arrow">↗</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Attack Simulator (Judge Presets) */}
+          <div className="simulator-area">
+            <div className="demo-title">
+              {t.simTitle} <span className="demo-title-sep">·</span> <span className="demo-sub">{t.simSub}</span>
+            </div>
+            <div className="sim-chips">
+              {SIMULATOR_SCENARIOS.map(scenario => (
+                <button
+                  type="button"
+                  key={scenario.id}
+                  className={`sim-chip${selectedDemo === scenario.id ? " chip-selected" : ""}`}
+                  onClick={() => runSimulator(scenario)}
+                >
+                  {scenario.tag} <span className="chip-arrow">▶</span>
                 </button>
               ))}
             </div>
@@ -1084,6 +1333,28 @@ export default function PhishShield() {
                         </button>
                       </div>
                     )}
+                    {activeResult.technical_details.upi_details && (
+                      <div className="sub-inspector-box">
+                        <h5>UPI Intent Breakdown</h5>
+                        <dl className="tech-kv-grid">
+                          <div><dt>Payee VPA (pa)</dt><dd>{activeResult.technical_details.upi_details.pa}</dd></div>
+                          <div><dt>Payee Name (pn)</dt><dd>{activeResult.technical_details.upi_details.pn}</dd></div>
+                          <div><dt>Amount (am)</dt><dd>{activeResult.technical_details.upi_details.am}</dd></div>
+                          <div><dt>Note (tn)</dt><dd>{activeResult.technical_details.upi_details.tn}</dd></div>
+                        </dl>
+                      </div>
+                    )}
+                    {activeResult.technical_details.email_headers && (
+                      <div className="sub-inspector-box">
+                        <h5>Email Header Spoof Check</h5>
+                        <dl className="tech-kv-grid">
+                          <div><dt>From Domain</dt><dd>{activeResult.technical_details.email_headers.from_domain}</dd></div>
+                          <div><dt>Reply-To Domain</dt><dd>{activeResult.technical_details.email_headers.reply_to_domain}</dd></div>
+                          <div><dt>Return-Path Domain</dt><dd>{activeResult.technical_details.email_headers.return_path_domain}</dd></div>
+                          <div><dt>Auth Failures</dt><dd>{activeResult.technical_details.email_headers.auth_failures?.join(", ") || "None detected"}</dd></div>
+                        </dl>
+                      </div>
+                    )}
                     <div className="tech-lists">
                       <div>
                         <h5>Detected URL indicators</h5>
@@ -1114,15 +1385,23 @@ export default function PhishShield() {
                 </details>
               )}
 
-              {/* Scan reference */}
+              {/* Scan reference & Share Safety Card */}
               <div className="reference-row">
                 <div>
                   <span>{t.scanRefLabel}</span>
                   <strong>{activeResult.scan_reference}</strong>
                 </div>
-                <button type="button" onClick={copyReference} className="copy-button">
-                  <Icon name={copied ? "check" : "copy"} size={14}/> {copied ? t.copiedRef : t.copyRef}
-                </button>
+                <div className="ref-actions">
+                  <button type="button" onClick={copyWarningSummary} className="copy-button">
+                    <Icon name={sharedWarning ? "check" : "share"} size={14}/> {sharedWarning ? t.sharedWarning : t.shareWarning}
+                  </button>
+                  <button type="button" onClick={downloadSafetyCardPng} className="copy-button">
+                    <Icon name="file" size={14}/> {t.downloadCard}
+                  </button>
+                  <button type="button" onClick={copyReference} className="copy-button">
+                    <Icon name={copied ? "check" : "copy"} size={14}/> {copied ? t.copiedRef : t.copyRef}
+                  </button>
+                </div>
               </div>
 
               {isPreview && <div className="preview-caption">{t.previewCaption}</div>}
@@ -1250,6 +1529,16 @@ export default function PhishShield() {
                   className="sr-only"
                   onChange={handleQrFileChange}
                 />
+                <button
+                  type="button"
+                  className={`qr-scan-btn${listening ? " listening" : ""}`}
+                  onClick={toggleVoiceInput}
+                >
+                  <Icon name="mic" size={13}/> {listening ? t.voiceListening : t.voiceBtn}
+                </button>
+                <button type="button" className="qr-scan-btn" onClick={() => emlInputRef.current?.click()}>
+                  <Icon name="file" size={13}/> {t.emlBtn}
+                </button>
                 <button type="button" className="qr-scan-btn" onClick={() => qrInputRef.current?.click()}>
                   <Icon name="eye" size={13}/> {t.scanQrBtn}
                 </button>

@@ -156,4 +156,71 @@
     },
     true,
   );
+
+  /* ── Hover guard for deceptive anchor text vs href mismatch ───────────── */
+  function showHoverBadge(label) {
+    let badge = document.getElementById("ps-hover-badge");
+    if (!badge) {
+      badge = document.createElement("div");
+      badge.id = "ps-hover-badge";
+      Object.assign(badge.style, {
+        position: "fixed",
+        bottom: "16px",
+        right: "16px",
+        zIndex: "2147483646",
+        background: "#09192c",
+        color: "#ffce77",
+        border: "1px solid #c97d00",
+        borderRadius: "10px",
+        padding: "8px 12px",
+        fontFamily: "Inter,ui-sans-serif,system-ui,sans-serif",
+        fontSize: "12px",
+        fontWeight: "600",
+        boxShadow: "0 6px 20px rgba(0,0,0,0.45)",
+        pointerEvents: "none",
+      });
+      document.body.appendChild(badge);
+    }
+    badge.textContent = label;
+  }
+
+  function hideHoverBadge() {
+    const badge = document.getElementById("ps-hover-badge");
+    if (badge) badge.remove();
+  }
+
+  document.addEventListener("mouseover", (event) => {
+    if (!guardEnabled) return;
+    const anchor = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+    if (!anchor || !anchor.href || !/^https?:\/\//i.test(anchor.href)) return;
+    const scanner = globalThis.PhishShieldScanner;
+    if (!scanner) return;
+    const mismatch = scanner.checkLinkTextMismatch ? scanner.checkLinkTextMismatch(anchor.textContent, anchor.href) : { mismatch: false };
+    if (mismatch.mismatch) {
+      showHoverBadge(`⚠ PhishShield: Link says "${mismatch.visibleDomain}" but goes to "${mismatch.targetHost}"`);
+      return;
+    }
+    const res = scanner.scanText(anchor.href);
+    if (res.risk_score >= 25) {
+      showHoverBadge(`⚠ PhishShield: ${res.risk_level} link (${res.risk_score}/100)`);
+    }
+  });
+
+  document.addEventListener("mouseout", (event) => {
+    const anchor = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+    if (anchor) hideHoverBadge();
+  });
+
+  /* ── Paste guard for WhatsApp Web / Gmail / forms ─────────────────────── */
+  document.addEventListener("paste", (event) => {
+    if (!guardEnabled) return;
+    const pasted = event.clipboardData && event.clipboardData.getData("text");
+    if (!pasted || pasted.trim().length < 5) return;
+    const scanner = globalThis.PhishShieldScanner;
+    if (!scanner) return;
+    const res = scanner.scanText(pasted);
+    if (res.risk_score >= 25) {
+      showSuspiciousToast(`Pasted ${res.risk_level} content: ${pasted.trim().slice(0, 60)}`, res.risk_score, false);
+    }
+  });
 })();

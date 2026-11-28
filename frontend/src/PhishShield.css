@@ -1438,3 +1438,61 @@ body[data-theme="light"] {
 .ps-app[data-theme="light"] .trigger-highlight { background: rgba(191, 47, 47, 0.12); color: #9c1d1d; }
 .ps-app[data-theme="light"] .defang-row { background: #ffffff; border-color: rgba(12, 138, 114, 0.22); }
 .ps-app[data-theme="light"] .qr-scan-btn { color: #0c8a72; border-color: rgba(12, 138, 114, 0.3); }
+
+/* ── Voice, EML, Simulator, Sub-inspector & Share Card ─────────────────── */
+.input-footer-actions { flex-wrap: wrap; justify-content: flex-end; }
+.qr-scan-btn.listening {
+  border-color: var(--coral);
+  color: var(--coral);
+  background: rgba(255, 139, 137, 0.14);
+  animation: pulse-soft 1.4s infinite;
+}
+.simulator-area {
+  margin-top: 14px;
+  padding: 12px 13px;
+  border-radius: 12px;
+  background: rgba(11, 28, 49, 0.45);
+  border: 1px dashed rgba(168, 85, 247, 0.3);
+}
+.sim-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 8px;
+}
+.sim-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(168, 85, 247, 0.32);
+  background: rgba(168, 85, 247, 0.1);
+  color: #e4c9ff;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.sim-chip:hover { border-color: #c084fc; background: rgba(168, 85, 247, 0.2); }
+.sim-chip.chip-selected { border-color: var(--teal); color: var(--teal); }
+.sub-inspector-box {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: rgba(11, 28, 49, 0.55);
+  border: 1px solid rgba(160, 190, 215, 0.14);
+}
+.sub-inspector-box h5 {
+  margin: 0 0 8px;
+  font-size: 10.5px;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ref-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ps-app[data-theme="light"] .simulator-area { background: #f6f3ff; border-color: rgba(168, 85, 247, 0.3); }
+.ps-app[data-theme="light"] .sim-chip { background: #efe8ff; color: #5b21b6; }
+.ps-app[data-theme="light"] .sub-inspector-box { background: #f8fbff; border-color: rgba(15, 34, 54, 0.12); }

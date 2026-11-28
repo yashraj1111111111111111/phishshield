@@ -57,6 +57,26 @@ _HINDI_REASON_MAP: tuple[tuple[str, str], ...] = (
         "zero-width characters",
         "संदेश में छिपे हुए अक्षर (zero-width characters) हैं, जिनका उपयोग सुरक्षा जाँच से बचने के लिए किया जाता है।",
     ),
+    (
+        "UPI payment link asks for payment",
+        "यह UPI भुगतान लिंक रिफंड, कैशबैक या इनाम के नाम पर पैसे मांग रहा है—UPI लिंक से हमेशा आपके खाते से पैसे कटते हैं, मिलते नहीं।",
+    ),
+    (
+        "UPI payee address (VPA)",
+        "इस UPI पता (VPA) का नाम कथित संस्था या उद्देश्य से मेल नहीं खाता, जो नकली भुगतान लिंक का संकेत है।",
+    ),
+    (
+        "From and Reply-To domains",
+        "ईमेल के From और Reply-To डोमेन अलग-अलग हैं, जो ईमेल स्पूफिंग (नकली प्रेषक) की आम तरकीब है।",
+    ),
+    (
+        "From and Return-Path domains",
+        "ईमेल के From और Return-Path डोमेन मेल नहीं खाते, जिससे प्रेषक के नकली होने का संकेत मिलता है।",
+    ),
+    (
+        "SPF/DKIM/DMARC",
+        "ईमेल के सुरक्षा हेडर (SPF/DKIM/DMARC) जाँच में विफल रहे हैं, जो नकली ईमेल का मज़बूत संकेत है।",
+    ),
 )
 
 _ALWAYS_SUSPICIOUS_RE = re.compile(

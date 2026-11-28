@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const { scanText } = require("../scanner.js");
+const { scanText, checkLinkTextMismatch } = require("../scanner.js");
 
 test("raw IP HTTP link is flagged Dangerous before opening", () => {
   const result = scanText("http://198.51.100.42/verify");
@@ -52,4 +52,14 @@ test("Low Risk link (0–24) does not reach any interception threshold", () => {
   const safe = scanText("https://www.example.com");
   assert.ok(safe.risk_score < 25, "must not trigger toast or hard block");
   assert.equal(safe.risk_level, "Low Risk");
+});
+
+test("checkLinkTextMismatch flags deceptive visible domain vs href target", () => {
+  const deceptive = checkLinkTextMismatch("Click hdfcbank.com to verify", "https://bit.ly/fake-hdfc");
+  assert.equal(deceptive.mismatch, true);
+  assert.equal(deceptive.visibleDomain, "hdfcbank.com");
+  assert.equal(deceptive.targetHost, "bit.ly");
+
+  const genuine = checkLinkTextMismatch("Visit hdfcbank.com", "https://netbanking.hdfcbank.com/login");
+  assert.equal(genuine.mismatch, false);
 });

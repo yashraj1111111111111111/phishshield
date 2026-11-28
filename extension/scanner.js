@@ -146,7 +146,26 @@
     };
   }
 
-  const api = { scanText };
+  function checkLinkTextMismatch(anchorText, href) {
+    const text = String(anchorText || "").trim();
+    if (!text || !href) return { mismatch: false };
+    const domainMatch = text.match(/\b([a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|in|org|net|co\.in|gov\.in|bank\.in))\b/i);
+    if (!domainMatch) return { mismatch: false };
+    const visibleDomain = domainMatch[1].toLowerCase();
+    let targetHost = "";
+    try {
+      targetHost = new URL(href).hostname.toLowerCase().replace(/^www\./, "");
+    } catch {
+      return { mismatch: false };
+    }
+    const cleanVisible = visibleDomain.replace(/^www\./, "");
+    if (!targetHost || targetHost === cleanVisible || targetHost.endsWith(`.${cleanVisible}`)) {
+      return { mismatch: false };
+    }
+    return { mismatch: true, visibleDomain: cleanVisible, targetHost };
+  }
+
+  const api = { scanText, checkLinkTextMismatch };
   root.PhishShieldScanner = api;
   if (typeof module !== "undefined" && module.exports) {
     module.exports = api;

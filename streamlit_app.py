@@ -838,6 +838,22 @@ def _render_result_card(outcome: ScanOutcome, t: dict, mode_badge: str, theme_na
             f"</div>"
         )
 
+    matched_terms = getattr(outcome, "matched_terms", None) or []
+    triggers_html = ""
+    if matched_terms:
+        chips = " ".join(f'<code style="margin-right:4px;padding:1px 6px;border-radius:4px;background:rgba(255,139,137,0.16);color:{p["dangerous"]};">{html.escape(m)}</code>' for m in matched_terms[:10])
+        triggers_html = f'<div style="margin-bottom:10px;font-size:11.5px;color:{p["muted"]};"><b>Detected triggers:</b> {chips}</div>'
+
+    playbook_html = ""
+    if outcome.risk_level != "Low Risk":
+        playbook_html = (
+            f'<div class="ps-explanation-card" style="border-color:rgba(255,139,137,0.35);">'
+            f'<span>WHAT TO DO NEXT</span>'
+            f'<p>Do not click links, install .APK/remote-access apps, or share OTP/UPI PIN. '
+            f'If money was debited or you were threatened, call <b>1930</b> (National Cyber Crime Helpline) or report at <b>cybercrime.gov.in</b>.</p>'
+            f'</div>'
+        )
+
     return f"""
     <div class="ps-result-card {tone}">
       <div class="ps-result-topline">
@@ -868,6 +884,8 @@ def _render_result_card(outcome: ScanOutcome, t: dict, mode_badge: str, theme_na
       </div>
       {unverified_html}
       {campaign_html}
+      {triggers_html}
+      {playbook_html}
       <div class="ps-evidence-title">{html.escape(t['evidence_heading'])} ({len(outcome.reasons)})</div>
       <ul class="ps-evidence-list">{reasons_html}</ul>
       {ml_html}
@@ -1085,7 +1103,8 @@ with col_result:
                     f"- **HTTPS:** `{td.get('https', 'not specified')}`\n"
                     f"- **Top-level domain:** `{td.get('top_level_domain', 'Not applicable')}`\n"
                     f"- **URL length:** `{td.get('url_length') if td.get('url_length') is not None else 'Not applicable'}`\n"
-                    f"- **Number of subdomains:** `{td.get('subdomain_count') if td.get('subdomain_count') is not None else 'Not applicable'}`"
+                    f"- **Number of subdomains:** `{td.get('subdomain_count') if td.get('subdomain_count') is not None else 'Not applicable'}`\n"
+                    f"- **De-fanged safe link:** `{td.get('defanged_url') or 'Not applicable'}`"
                 )
                 url_inds = td.get("detected_url_indicators") or []
                 msg_inds = td.get("detected_message_indicators") or []

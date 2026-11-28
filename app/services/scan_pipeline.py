@@ -23,6 +23,7 @@ class ScanOutcome:
     ml_probability: float | None
     campaign_detected: bool
     technical_details: dict[str, Any] = field(default_factory=dict)
+    matched_terms: list[str] = field(default_factory=list)
 
 
 def run_scan_pipeline(content: str, language: str, client_ip: str) -> ScanOutcome:
@@ -62,4 +63,5 @@ def run_scan_pipeline(content: str, language: str, client_ip: str) -> ScanOutcom
         ml_probability=ml_probability,
         campaign_detected=campaign_detected,
         technical_details=technical_details,
+        matched_terms=result.matched_terms,
     )

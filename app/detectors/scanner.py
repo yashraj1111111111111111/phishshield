@@ -1,5 +1,6 @@
 import ipaddress
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlparse
@@ -94,6 +95,7 @@ MESSAGE_SCAM_RULES: list[tuple[str, int, re.Pattern[str], str]] = [
 
 _URGENCY_RE = re.compile(r"\b(today|immediately|within \d+ hours?|last chance)\b", flags=re.IGNORECASE)
 _SENSITIVE_INFO_RE = re.compile(r"\b(otp|cvv|pin|password)\b", flags=re.IGNORECASE)
+_ZERO_WIDTH_RE = re.compile(r"[\u200b\u200c\u200d\u2060\ufeff]")
 _BARE_DOMAIN_TLDS = "|".join(tld.lstrip(".") for tld in ABUSED_TLDS) + "|com|in|org|net|co\\.in"
 _MESSAGE_URL_RE = re.compile(
     rf"(?:(?:https?://|www\.)[^\s]+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:{_BARE_DOMAIN_TLDS})(?:/[^\s]*)?)",
@@ -108,6 +110,7 @@ class ScanResult:
     reasons: list[str]
     content_type: str
     technical_details: dict[str, Any] = field(default_factory=dict)
+    matched_terms: list[str] = field(default_factory=list)
 
 
 def _is_ip(hostname: str) -> bool:
@@ -126,6 +129,29 @@ def _is_official_host(host: str, official_domains: tuple[str, ...]) -> bool:
 def _extract_message_urls(message: str) -> list[str]:
     """Extract explicit URLs and bare suspicious-TLD domains from message text."""
     return [match.group(0).rstrip(".,;:!?)") for match in _MESSAGE_URL_RE.finditer(message)]
+
+
+def _has_mixed_or_non_ascii_host(host: str) -> bool:
+    """Detect non-ASCII homograph characters (e.g. Cyrillic lookalikes) in a domain host."""
+    return any(ord(ch) > 127 for ch in host)
+
+
+def _host_scripts(host: str) -> set[str]:
+    """Return Unicode script families present in a host (e.g. LATIN, CYRILLIC)."""
+    scripts: set[str] = set()
+    for ch in host:
+        if ch.isalpha():
+            name = unicodedata.name(ch, "")
+            if name:
+                scripts.add(name.split(" ", 1)[0])
+    return scripts
+
+
+def _defang_url(url: str) -> str:
+    """Convert a clickable URL into a safe non-clickable de-fanged representation."""
+    defanged = re.sub(r"^https://", "hxxps://", url, flags=re.IGNORECASE)
+    defanged = re.sub(r"^http://", "hxxp://", defanged, flags=re.IGNORECASE)
+    return defanged.replace(".", "[.]")
 
 
 def _extract_url_facts(url: str) -> dict[str, Any]:
@@ -153,7 +179,6 @@ def _extract_url_facts(url: str) -> dict[str, Any]:
             port = parsed.port
     except ValueError:
         malformed = True
-        # Best-effort lexical fallback for malformed hosts/ports without raising
         netloc = candidate.split("://", 1)[-1].split("/", 1)[0]
         port_match = re.search(r":(\d+)$", netloc)
         if port_match:
@@ -183,6 +208,7 @@ def _extract_url_facts(url: str) -> dict[str, Any]:
         "top_level_domain": tld,
         "url_length": len(url),
         "subdomain_count": subdomain_count,
+        "defanged_url": _defang_url(url),
         "_candidate": candidate,
         "_path": path,
         "_malformed": malformed,
@@ -190,9 +216,10 @@ def _extract_url_facts(url: str) -> dict[str, Any]:
     }
 
 
-def _url_findings(url: str) -> tuple[list[tuple[str, str, int, str]], dict[str, Any]]:
+def _url_findings(url: str) -> tuple[list[tuple[str, str, int, str]], dict[str, Any], list[str]]:
     facts = _extract_url_facts(url)
     findings: list[tuple[str, str, int, str]] = []
+    matched: list[str] = []
     candidate = facts["_candidate"]
     host = "" if facts["parsed_host"] == "Not specified" else facts["parsed_host"]
     path = facts["_path"]
@@ -202,16 +229,38 @@ def _url_findings(url: str) -> tuple[list[tuple[str, str, int, str]], dict[str, 
         findings.append(("url_malformed_host", "url", 15, "The link has malformed brackets or host formatting."))
     if facts["scheme"] == "http" or facts["_effective_scheme"] != "https":
         findings.append(("url_no_https", "url", 15, "The link does not use HTTPS, so its connection may not be protected."))
+        matched.append("http://")
     if host and _is_ip(host):
         findings.append(("url_raw_ip", "url", 30, "The link uses a raw IP address instead of a normal website name."))
+        matched.append(host)
     if facts["port"] != "Not specified":
         findings.append(("url_explicit_port", "url", 10, f"The link specifies an explicit port (:{facts['port']}), which is uncommon for standard websites."))
+        matched.append(f":{facts['port']}")
+    if host and ("xn--" in host):
+        findings.append(("url_punycode", "url", 25, "Uses Punycode (xn--) encoding in the domain, which can hide look-alike non-ASCII characters."))
+        matched.append("xn--")
+    if host and _has_mixed_or_non_ascii_host(host):
+        scripts = sorted(_host_scripts(host))
+        script_desc = ", ".join(scripts) if scripts else "non-ASCII"
+        findings.append(
+            (
+                "url_homograph_spoof",
+                "url",
+                35,
+                f"Contains non-ASCII or mixed-script characters ({script_desc}) in the domain, a homograph trick to imitate trusted brands.",
+            )
+        )
+        matched.append(host)
     if host in SHORTENERS:
         findings.append(("url_shortener", "url", 20, "This is a shortened link, which can hide its real destination."))
+        matched.append(host)
     if host and any(host.endswith(tld) for tld in ABUSED_TLDS):
         findings.append(("url_abused_tld", "url", 20, "Uses a domain extension (like .xyz or .top) frequently abused by temporary scam websites."))
+        matched.append(facts["top_level_domain"])
     if path.endswith(DANGEROUS_DOWNLOAD_EXTS):
         findings.append(("url_executable_download", "url", 45, "Links directly to a downloadable app or executable file (.apk/.exe) instead of a standard webpage."))
+        ext = next((e for e in DANGEROUS_DOWNLOAD_EXTS if path.endswith(e)), ".apk")
+        matched.append(ext)
     if len(candidate) > 100:
         findings.append(("url_excessive_length", "url", 10, "The link is unusually long, which can be used to hide a misleading destination."))
     if "%" in candidate or "@" in candidate:
@@ -221,7 +270,6 @@ def _url_findings(url: str) -> tuple[list[tuple[str, str, int, str]], dict[str, 
     if host.count("-") >= 2:
         findings.append(("url_hyphen_stacking", "url", 15, "The website domain contains multiple hyphens, a common trick used to make fake links look official."))
     for brand, official_domains in BRAND_OFFICIAL_DOMAINS.items():
-        # A brand in a non-official-looking host is only a hint, never proof.
         if brand in host and not _is_official_host(host, official_domains):
             findings.append(
                 (
@@ -231,6 +279,7 @@ def _url_findings(url: str) -> tuple[list[tuple[str, str, int, str]], dict[str, 
                     f"Contains a well-known brand or service name ('{brand}') inside an unofficial web address to impersonate a trusted organization.",
                 )
             )
+            matched.append(brand)
             break
     word_hits = sorted(word for word in SUSPICIOUS_WORDS if word in full_url)
     if word_hits:
@@ -242,12 +291,25 @@ def _url_findings(url: str) -> tuple[list[tuple[str, str, int, str]], dict[str, 
                 f"The link contains pressure-related terms: {', '.join(word_hits[:4])}.",
             )
         )
-    return findings, facts
+        matched.extend(word_hits[:4])
+    return findings, facts, matched
 
 
-def _message_findings(message: str) -> tuple[list[tuple[str, str, int, str]], dict[str, Any] | None]:
+def _message_findings(message: str) -> tuple[list[tuple[str, str, int, str]], dict[str, Any] | None, list[str]]:
     lowered = message.lower()
     findings: list[tuple[str, str, int, str]] = []
+    matched: list[str] = []
+
+    if _ZERO_WIDTH_RE.search(message):
+        findings.append(
+            (
+                "msg_zero_width_obfuscation",
+                "message",
+                20,
+                "Contains invisible zero-width characters, a trick used to bypass text filters.",
+            )
+        )
+
     hits = sorted(word for word in SUSPICIOUS_WORDS if word in lowered)
     if hits:
         findings.append(
@@ -258,28 +320,37 @@ def _message_findings(message: str) -> tuple[list[tuple[str, str, int, str]], di
                 f"The message uses scam-associated language: {', '.join(hits[:5])}.",
             )
         )
+        matched.extend(hits[:5])
 
-    has_sensitive = bool(_SENSITIVE_INFO_RE.search(lowered))
+    sensitive_hits = _SENSITIVE_INFO_RE.findall(lowered)
+    has_sensitive = bool(sensitive_hits)
     if has_sensitive:
         findings.append(("msg_sensitive_info", "message", 30, "The message asks for sensitive authentication or payment information."))
+        matched.extend(sensitive_hits)
 
-    has_urgency = bool(_URGENCY_RE.search(lowered)) or any(w in hits for w in ("blocked", "urgent", "kyc", "limited time"))
-    if _URGENCY_RE.search(lowered):
+    urgency_hits = _URGENCY_RE.findall(lowered)
+    has_urgency = bool(urgency_hits) or any(w in hits for w in ("blocked", "urgent", "kyc", "limited time"))
+    if urgency_hits:
         findings.append(("msg_urgency_pressure", "message", 15, "The message creates urgency, a common social-engineering tactic."))
+        matched.extend(urgency_hits)
 
     matched_categories: set[str] = set()
     for category, weight, pattern, reason in MESSAGE_SCAM_RULES:
-        if pattern.search(lowered):
+        category_hits = pattern.findall(message)
+        if category_hits:
             matched_categories.add(category)
             findings.append((f"msg_{category}", "message", weight, reason))
+            matched.extend(category_hits)
 
     urls = _extract_message_urls(message)
     primary_url_facts: dict[str, Any] | None = None
     for idx, url in enumerate(urls):
-        url_findings, facts = _url_findings(url)
+        url_findings, facts, url_matched = _url_findings(url)
         if idx == 0:
             primary_url_facts = facts
         findings.extend(url_findings)
+        matched.extend(url_matched)
+        matched.append(url)
 
     has_threat = has_urgency or ("digital_arrest" in matched_categories)
     has_action = has_sensitive or bool(urls) or bool(matched_categories & {"upi_qr", "apk_challan", "remote_access"})
@@ -292,7 +363,7 @@ def _message_findings(message: str) -> tuple[list[tuple[str, str, int, str]], di
                 "Combines urgent pressure or legal threats with a request for sensitive action (OTP, PIN, app install, or link).",
             )
         )
-    return findings, primary_url_facts
+    return findings, primary_url_facts, matched
 
 
 def _build_technical_details(
@@ -306,7 +377,7 @@ def _build_technical_details(
         {"rule_id": rule_id, "category": category, "score": weight, "reason": reason}
         for rule_id, category, weight, reason in findings
     ]
-    base: dict[str, Any] = {
+    return {
         "parsed_host": url_facts["parsed_host"] if url_facts else "Not applicable (message without URL)",
         "host_type": url_facts["host_type"] if url_facts else "not_applicable",
         "port": url_facts["port"] if url_facts else "Not specified",
@@ -315,20 +386,20 @@ def _build_technical_details(
         "top_level_domain": url_facts["top_level_domain"] if url_facts else "Not applicable",
         "url_length": url_facts["url_length"] if url_facts else None,
         "subdomain_count": url_facts["subdomain_count"] if url_facts else None,
+        "defanged_url": url_facts["defanged_url"] if url_facts else None,
         "detected_url_indicators": url_indicators,
         "detected_message_indicators": message_indicators,
         "triggered_rules": triggered_rules,
     }
-    return base
 
 
 def scan(content: str) -> ScanResult:
     content = content.strip()
     looks_like_url = bool(re.fullmatch(r"(?:https?://)?[^\s/]+(?:/[^\s]*)?", content)) and " " not in content
     if looks_like_url:
-        findings, url_facts = _url_findings(content)
+        findings, url_facts, raw_matched = _url_findings(content)
     else:
-        findings, url_facts = _message_findings(content)
+        findings, url_facts, raw_matched = _message_findings(content)
 
     score = min(100, sum(weight for _, _, weight, _ in findings))
     if score >= 60:
@@ -340,6 +411,14 @@ def scan(content: str) -> ScanResult:
     reasons = [reason for _, _, _, reason in findings] or [
         "No common phishing indicators were found in the text, though the destination itself is unverified and not guaranteed to be safe."
     ]
+    deduped_terms: list[str] = []
+    seen_lower: set[str] = set()
+    for term in sorted({t.strip() for t in raw_matched if t and t.strip()}, key=len, reverse=True):
+        low = term.lower()
+        if low not in seen_lower:
+            seen_lower.add(low)
+            deduped_terms.append(term)
+
     technical_details = _build_technical_details(findings, url_facts)
     return ScanResult(
         score=score,
@@ -347,4 +426,5 @@ def scan(content: str) -> ScanResult:
         reasons=reasons,
         content_type="url" if looks_like_url else "message",
         technical_details=technical_details,
+        matched_terms=deduped_terms,
     )

@@ -141,3 +141,24 @@ def test_message_with_multiple_scam_categories_technical_details():
     assert len(td["detected_url_indicators"]) >= 3
     rule_ids = {r["rule_id"] for r in td["triggered_rules"]}
     assert {"msg_digital_arrest", "msg_apk_challan", "msg_remote_access", "msg_upi_qr", "combo_threat_plus_action"}.issubset(rule_ids)
+
+
+def test_homograph_and_punycode_spoof_detection():
+    # Cyrillic 'р' (\u0440) + Latin 'aypal.com'
+    cyrillic_paypal = scan("https://\u0440aypal.com/login")
+    assert cyrillic_paypal.score >= 35
+    assert cyrillic_paypal.level in {"Suspicious", "Dangerous"}
+    rule_ids = {r["rule_id"] for r in cyrillic_paypal.technical_details["triggered_rules"]}
+    assert "url_homograph_spoof" in rule_ids
+
+    puny = scan("https://xn--pypal-4ve.com/login")
+    puny_rules = {r["rule_id"] for r in puny.technical_details["triggered_rules"]}
+    assert "url_punycode" in puny_rules
+
+
+def test_zero_width_obfuscation_and_defanged_url_and_matched_terms():
+    zws = scan("Enter U\u200bPI PIN to receive money at http://198.51.100.42:8080/login")
+    rule_ids = {r["rule_id"] for r in zws.technical_details["triggered_rules"]}
+    assert "msg_zero_width_obfuscation" in rule_ids
+    assert zws.technical_details["defanged_url"] == "hxxp://198[.]51[.]100[.]42:8080/login"
+    assert "198.51.100.42" in zws.matched_terms

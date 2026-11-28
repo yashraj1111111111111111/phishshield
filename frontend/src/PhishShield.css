@@ -1323,3 +1323,118 @@ body[data-theme="light"] {
     border-left: 0;
   }
 }
+
+/* ── Trigger highlighter, Recovery playbook, De-fanged copy & QR button ───── */
+.input-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.qr-scan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid rgba(24, 217, 210, 0.28);
+  background: rgba(24, 217, 210, 0.08);
+  color: var(--teal);
+  font-size: 10px;
+  font-weight: 600;
+}
+.qr-scan-btn:hover { border-color: var(--teal); background: rgba(24, 217, 210, 0.14); }
+
+.highlight-box {
+  margin-top: 14px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: rgba(7, 17, 31, 0.65);
+  border: 1px solid rgba(160, 190, 215, 0.14);
+}
+.highlight-label {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.highlight-text {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--text2);
+  word-break: break-word;
+}
+.trigger-highlight {
+  background: rgba(255, 139, 137, 0.22);
+  color: #ffd5d4;
+  border-bottom: 1.5px solid var(--coral);
+  padding: 0 3px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.playbook-card {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: rgba(24, 217, 210, 0.06);
+  border: 1px solid rgba(24, 217, 210, 0.22);
+}
+.playbook-card.dangerous {
+  background: rgba(255, 139, 137, 0.07);
+  border-color: rgba(255, 139, 137, 0.28);
+}
+.playbook-card.suspicious {
+  background: rgba(255, 206, 119, 0.07);
+  border-color: rgba(255, 206, 119, 0.28);
+}
+.playbook-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--text);
+  margin-bottom: 7px;
+}
+.playbook-head svg { color: var(--teal); }
+.playbook-card ul {
+  margin: 0;
+  padding-left: 17px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text2);
+}
+.playbook-card li + li { margin-top: 5px; }
+
+.defang-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  margin-bottom: 12px;
+  border-radius: 9px;
+  background: rgba(11, 28, 49, 0.75);
+  border: 1px solid rgba(24, 217, 210, 0.18);
+}
+.defang-row span {
+  display: block;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.defang-row code {
+  font-size: 11px;
+  color: var(--teal);
+  word-break: break-all;
+}
+
+.ps-app[data-theme="light"] .highlight-box { background: #f8fbff; border-color: rgba(15, 34, 54, 0.12); }
+.ps-app[data-theme="light"] .trigger-highlight { background: rgba(191, 47, 47, 0.12); color: #9c1d1d; }
+.ps-app[data-theme="light"] .defang-row { background: #ffffff; border-color: rgba(12, 138, 114, 0.22); }
+.ps-app[data-theme="light"] .qr-scan-btn { color: #0c8a72; border-color: rgba(12, 138, 114, 0.3); }

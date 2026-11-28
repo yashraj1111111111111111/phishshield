@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_API_URL, submitScan } from "./api.js";
 import "./PhishShield.css";
 
@@ -218,6 +218,13 @@ const COPY = {
     quickCheckTitle: "Quick Message & Link Check",
     quickCheckSub: "Test any URL or message without scrolling down.",
     viewFullResult: "View full breakdown & Technical details",
+    scanQrBtn: "Scan QR image",
+    qrNoSupport: "Your browser does not support offline QR image decoding. Please paste the QR link or text directly.",
+    qrNotFound: "No QR code was detected in that image. Try a clearer screenshot or paste the text directly.",
+    highlightsTitle: "Detected triggers in your text",
+    playbookTitle: "What to do next",
+    copyDefanged: "Copy de-fanged",
+    copiedDefanged: "Copied safe",
   },
   hi: {
     tagline: "क्लिक करने से पहले जाँचें।",
@@ -336,6 +343,13 @@ const COPY = {
     quickCheckTitle: "त्वरित संदेश व लिंक जाँच",
     quickCheckSub: "नीचे स्क्रॉल किए बिना यहीं से संदेश या लिंक जाँचें।",
     viewFullResult: "पूरा विवरण व Technical details देखें",
+    scanQrBtn: "QR इमेज जाँचें",
+    qrNoSupport: "आपका ब्राउज़र ऑफ़लाइन QR डिकोडिंग सपोर्ट नहीं करता। कृपया QR का लिंक या टेक्स्ट सीधे पेस्ट करें।",
+    qrNotFound: "इस इमेज में कोई QR कोड नहीं मिला। साफ़ स्क्रीनशॉट आज़माएं या टेक्स्ट सीधे पेस्ट करें।",
+    highlightsTitle: "टेक्स्ट में मिले संदिग्ध शब्द",
+    playbookTitle: "आगे क्या करें (सुरक्षा कदम)",
+    copyDefanged: "सुरक्षित कॉपी",
+    copiedDefanged: "कॉपी हो गया",
   },
 };
 
@@ -445,10 +459,54 @@ function normalizeResult(data) {
     ...data,
     risk_score:    score,
     reasons:       Array.isArray(data?.reasons) ? data.reasons : [],
+    matched_terms: Array.isArray(data?.matched_terms) ? data.matched_terms : [],
     explanation:   data?.explanation || "No plain-language explanation was provided.",
     scan_reference: String(data?.scan_reference || "Unavailable"),
     content_type:  data?.content_type || "message",
   };
+}
+
+function renderHighlightedText(text, terms) {
+  if (!text || !Array.isArray(terms) || !terms.length) return text;
+  const escaped = terms
+    .filter(Boolean)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!escaped.length) return text;
+  const regex = new RegExp(`(${escaped.join("|")})`, "gi");
+  const lowerSet = new Set(terms.map(t => t.toLowerCase()));
+  return text.split(regex).map((part, idx) =>
+    lowerSet.has(part.toLowerCase())
+      ? <mark key={idx} className="trigger-highlight">{part}</mark>
+      : <React.Fragment key={idx}>{part}</React.Fragment>
+  );
+}
+
+function getPlaybookSteps(result, lang) {
+  if (!result || result.risk_score < 25) return [];
+  const ruleIds = new Set((result.technical_details?.triggered_rules || []).map(r => r.rule_id));
+  const isHi = lang === "hi";
+  const steps = [];
+  if (ruleIds.has("msg_digital_arrest")) {
+    steps.push(isHi
+      ? "पुलिस, CBI या कस्टम कभी वीडियो कॉल पर 'डिजिटल अरेस्ट' या पैसे की माँग नहीं करते—तुरंत कॉल काटें।"
+      : "Police, CBI, and customs never conduct 'digital arrests' or demand money over video calls—hang up immediately.");
+  }
+  if (ruleIds.has("msg_apk_challan") || ruleIds.has("url_executable_download") || ruleIds.has("msg_remote_access")) {
+    steps.push(isHi
+      ? "कोई .APK या रिमोट-एक्सेस ऐप (AnyDesk/TeamViewer) इंस्टॉल न करें। यदि पहले से इंस्टॉल है तो तुरंत Airplane Mode चालू करें और ऐप हटाएं।"
+      : "Do not install any .APK or remote-access app (AnyDesk/TeamViewer). If already installed, turn on Airplane Mode immediately and uninstall it.");
+  }
+  if (ruleIds.has("msg_upi_qr") || ruleIds.has("msg_sensitive_info")) {
+    steps.push(isHi
+      ? "पैसे पाने के लिए कभी UPI PIN या QR कोड स्कैन की ज़रूरत नहीं होती। यदि पैसे कट गए हैं तो तुरंत 1930 पर कॉल करें या cybercrime.gov.in पर रिपोर्ट करें।"
+      : "You never need to enter a UPI PIN or scan a QR code to receive money. If money was debited, call 1930 immediately or report at cybercrime.gov.in.");
+  }
+  if (!steps.length) {
+    steps.push(isHi
+      ? "लिंक न खोलें और न ही OTP/पासवर्ड साझा करें। पुष्टि के लिए सीधे आधिकारिक ऐप या बुकमार्क की गई वेबसाइट का उपयोग करें।"
+      : "Do not click links, reply, or share OTPs/passwords. Verify directly via the organisation's official app or bookmarked website.");
+  }
+  return steps;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
@@ -465,8 +523,11 @@ export default function PhishShield() {
   const [recent,   setRecent]   = useState([]);
   const [preview,  setPreview]  = useState("dangerous");
   const [copied,   setCopied]   = useState(false);
+  const [copiedDefanged, setCopiedDefanged] = useState(false);
   const [selectedDemo, setSelectedDemo] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [scannedText, setScannedText] = useState("");
+  const qrInputRef = useRef(null);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
@@ -479,6 +540,7 @@ export default function PhishShield() {
   const activeResult = result || (preview === "rate" ? null : mocks[preview]);
   const tier         = useMemo(() => (activeResult ? getTier(activeResult.risk_score, t) : null), [activeResult, t]);
   const isPreview    = !result && preview !== "rate";
+  const playbookSteps = useMemo(() => getPlaybookSteps(activeResult, language), [activeResult, language]);
 
   function handleLanguageChange(nextLang) {
     setLanguage(nextLang);
@@ -510,7 +572,9 @@ export default function PhishShield() {
     try {
       // Submitted text is sent only to the configured analysis API. This app never
       // opens, fetches, previews, or executes a URL found in the submitted content.
-      const data = normalizeResult(await submitScan({ content: content.trim(), language, apiUrl: API_URL }));
+      const trimmed = content.trim();
+      const data = normalizeResult(await submitScan({ content: trimmed, language, apiUrl: API_URL }));
+      setScannedText(trimmed);
       setResult(data);
       setPreview("");
       setRecent(items => [data, ...items.filter(i => i.scan_reference !== data.scan_reference)].slice(0, 4));
@@ -533,6 +597,43 @@ export default function PhishShield() {
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
       setError({ type: "offline", message: t.copyError });
+    }
+  }
+
+  async function copyDefangedUrl(url) {
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedDefanged(true);
+      window.setTimeout(() => setCopiedDefanged(false), 1600);
+    } catch {
+      setError({ type: "offline", message: t.copyError });
+    }
+  }
+
+  async function handleQrFileChange(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (typeof window.BarcodeDetector !== "function") {
+      setError({ type: "offline", message: t.qrNoSupport });
+      return;
+    }
+    try {
+      const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+      const bitmap = await createImageBitmap(file);
+      const codes = await detector.detect(bitmap);
+      if (typeof bitmap.close === "function") bitmap.close();
+      const rawValue = codes?.[0]?.rawValue?.trim();
+      if (!rawValue) {
+        setError({ type: "offline", message: t.qrNotFound });
+        return;
+      }
+      setContent(rawValue.slice(0, 5000));
+      setSelectedDemo(null);
+      setError(null);
+    } catch {
+      setError({ type: "offline", message: t.qrNotFound });
     }
   }
 
@@ -771,9 +872,21 @@ export default function PhishShield() {
             />
             <div className="input-footer">
               <span><Icon name="lock" size={13}/> {t.textOnlyNote}</span>
-              <button type="button" className="clear-button" onClick={() => { setContent(""); setError(null); setSelectedDemo(null); }}>
-                <Icon name="close" size={14}/> {t.clearBtn}
-              </button>
+              <div className="input-footer-actions">
+                <input
+                  ref={qrInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleQrFileChange}
+                />
+                <button type="button" className="qr-scan-btn" onClick={() => qrInputRef.current?.click()}>
+                  <Icon name="eye" size={13}/> {t.scanQrBtn}
+                </button>
+                <button type="button" className="clear-button" onClick={() => { setContent(""); setError(null); setSelectedDemo(null); }}>
+                  <Icon name="close" size={14}/> {t.clearBtn}
+                </button>
+              </div>
             </div>
             <div className="form-actions">
               <button className="scan-button" type="submit" disabled={content.trim().length < 3 || loading}>
@@ -893,6 +1006,27 @@ export default function PhishShield() {
                 }
               </div>
 
+              {/* Highlighted suspicious triggers */}
+              {result && result.matched_terms?.length > 0 && scannedText && (
+                <div className="highlight-box">
+                  <span className="highlight-label">{t.highlightsTitle}</span>
+                  <p className="highlight-text">{renderHighlightedText(scannedText, result.matched_terms)}</p>
+                </div>
+              )}
+
+              {/* What to do next playbook */}
+              {playbookSteps.length > 0 && (
+                <div className={`playbook-card ${tier.tone}`}>
+                  <div className="playbook-head">
+                    <Icon name="shield" size={15}/>
+                    <b>{t.playbookTitle}</b>
+                  </div>
+                  <ul>
+                    {playbookSteps.map((step, i) => <li key={i}>{step}</li>)}
+                  </ul>
+                </div>
+              )}
+
               {/* Low-risk unverified notice */}
               {tier.key === "low" && (
                 <div className="unverified-callout">
@@ -934,6 +1068,22 @@ export default function PhishShield() {
                       <div><dt>URL length</dt><dd>{activeResult.technical_details.url_length ?? "Not applicable"}</dd></div>
                       <div><dt>Number of subdomains</dt><dd>{activeResult.technical_details.subdomain_count ?? "Not applicable"}</dd></div>
                     </dl>
+                    {activeResult.technical_details.defanged_url && (
+                      <div className="defang-row">
+                        <div>
+                          <span>De-fanged safe link</span>
+                          <code>{activeResult.technical_details.defanged_url}</code>
+                        </div>
+                        <button
+                          type="button"
+                          className="copy-button"
+                          onClick={() => copyDefangedUrl(activeResult.technical_details.defanged_url)}
+                        >
+                          <Icon name={copiedDefanged ? "check" : "copy"} size={13}/>
+                          {copiedDefanged ? t.copiedDefanged : t.copyDefanged}
+                        </button>
+                      </div>
+                    )}
                     <div className="tech-lists">
                       <div>
                         <h5>Detected URL indicators</h5>
@@ -1092,9 +1242,21 @@ export default function PhishShield() {
             />
             <div className="input-footer">
               <span><Icon name="lock" size={13}/> {t.textOnlyNote}</span>
-              <button type="button" className="clear-button" onClick={() => { setContent(""); setError(null); setSelectedDemo(null); }}>
-                <Icon name="close" size={14}/> {t.clearBtn}
-              </button>
+              <div className="input-footer-actions">
+                <input
+                  ref={qrInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleQrFileChange}
+                />
+                <button type="button" className="qr-scan-btn" onClick={() => qrInputRef.current?.click()}>
+                  <Icon name="eye" size={13}/> {t.scanQrBtn}
+                </button>
+                <button type="button" className="clear-button" onClick={() => { setContent(""); setError(null); setSelectedDemo(null); }}>
+                  <Icon name="close" size={14}/> {t.clearBtn}
+                </button>
+              </div>
             </div>
             <button className="scan-button quick-scan-btn" type="submit" disabled={content.trim().length < 3 || loading}>
               {loading

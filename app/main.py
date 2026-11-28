@@ -42,6 +42,7 @@ class ScanResponse(BaseModel):
     ml_probability: float | None = None
     campaign_detected: bool = False
     technical_details: dict[str, Any] = Field(default_factory=dict)
+    matched_terms: list[str] = Field(default_factory=list)
 
 
 @app.get("/health")
@@ -74,4 +75,5 @@ def create_scan(payload: ScanRequest, request: Request) -> ScanResponse:
         ml_probability=outcome.ml_probability,
         campaign_detected=outcome.campaign_detected,
         technical_details=outcome.technical_details,
+        matched_terms=outcome.matched_terms,
     )

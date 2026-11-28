@@ -58,6 +58,8 @@ def test_scan_safe_and_dangerous_urls_with_ml_signal(client):
     assert "does not prove that this website or message is genuine" in safe_body["explanation"].lower()
     assert safe_body["technical_details"]["parsed_host"] == "www.example.com"
     assert safe_body["technical_details"]["port"] == "Not specified"
+    assert safe_body["technical_details"]["defanged_url"] == "hxxps://www[.]example[.]com"
+    assert isinstance(safe_body["matched_terms"], list)
 
     danger_res = test_client.post("/api/scan", json={"content": "http://198.51.100.42/verify", "language": "en"})
     assert danger_res.status_code == 200
